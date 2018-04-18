@@ -148,7 +148,7 @@ bool McbFrameCheckCRC(const TMcbFrame* tFrame)
 {
     bool bCRC = true;
 
-    if (IpbFrameCRC(tFrame) != 0)
+    if (McbFrameCRC(tFrame) != 0)
     {
         bCRC = false;
     }
