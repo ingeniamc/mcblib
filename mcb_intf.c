@@ -8,76 +8,56 @@
  */
 
 #include "mcb_intf.h"
-#include "mcb_frame.h"
-#include <stdint.h>
-#include <stdio.h>
+#include <stddef.h>
 
 #define DFLT_TIMEOUT  100
 #define SIZE_WORDS    2
 
 static void
-McbIntfTransfer(const McbIntf* ptInst, TMcbFrame* tInFrame, TMcbFrame* tOutFrame);
+Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* tInFrame, Mcb_TFrame* tOutFrame);
 
-static uint8_t
-McbIntfIRQRead(const McbIntf* ptInst);
+static Mcb_EStatus
+Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t* ptInBuf, uint16_t* ptOutBuf);
 
-static bool
-McbIntfIsReady(const McbIntf* ptInst);
-
-static bool
-McbIntfCheckCrc(const McbIntf* ptInst);
-
-static EMcbStatus
-McbIntfCyclicTranfer(McbIntf* ptInst, uint16_t* ptInBuf, uint16_t* ptOutBuf);
-
-static void McbIntfTransfer(const McbIntf* ptInst, TMcbFrame* ptInFrame, TMcbFrame* ptOutFrame)
-{
-    /** Set to low Chip select pin */
-
-    /** Launch a SPI transfer */
-}
-
-void McbIntfInit(McbIntf* ptInst)
+void Mcb_IntfInit(Mcb_TIntf* ptInst)
 {
     ptInst->eState = MCB_STANDBY;
-
-    /** Linkar IRQ, pin IRQ, SYNC0 y SYNC1, and CS */
     ptInst->isIrqEvnt = false;
-    /** SPI no es necesario creo */
 }
 
-void McbIntfDeinit(McbIntf* ptInst)
+void Mcb_IntfDeinit(Mcb_TIntf* ptInst)
 {
-
+    ptInst->eState = MCB_STANDBY;
+    ptInst->isIrqEvnt = false;
 }
 
-EMcbStatus McbIntfWrite(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uint16_t* ptCmd, uint16_t* ptData,
-        uint16_t* ptSz)
+Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t* pu16Node, uint16_t* pu16Addr, uint16_t* pu16Cmd,
+        uint16_t* pu16Data, uint16_t* pu16Sz)
 {
     switch (ptInst->eState)
     {
         case MCB_STANDBY:
-            ptInst->u16Sz = *ptSz;
+            ptInst->u16Sz = *pu16Sz;
             ptInst->isPending = false;
             ptInst->eState = MCB_WRITE_REQUEST;
             break;
         case MCB_WRITE_REQUEST:
-            if (McbIntfIRQRead(ptInst) == 1)
+            if (Mcb_IntfIRQRead(ptInst->u16Id) == MCB_HIGH)
             {
                 /* Check if static transmission should be segmented */
                 if (ptInst->u16Sz > MCB_FRM_CONFIG_SZ)
                 {
-                    McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, *ptCmd, MCB_FRM_SEG,
-                            &ptData[*ptSz - ptInst->u16Sz], NULL, 0, false);
+                    Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, *pu16Cmd, MCB_FRM_SEG,
+                            &pu16Data[*pu16Sz - ptInst->u16Sz], NULL, 0, false);
                     ptInst->isPending = true;
                 }
                 else
                 {
-                    McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, *ptCmd, MCB_FRM_NOTSEG,
-                            &ptData[*ptSz - ptInst->u16Sz], NULL, 0, false);
+                    Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, *pu16Cmd, MCB_FRM_NOTSEG,
+                            &pu16Data[*pu16Sz - ptInst->u16Sz], NULL, 0, false);
                 }
 
-                if (McbIntfIsReady(ptInst) == true)
+                if (Mcb_IntfIsReady(ptInst->u16Id) != false)
                 {
                     if ((ptInst->u16Sz - MCB_FRM_HEAD_SZ) >= MCB_FRM_CONFIG_SZ)
                     {
@@ -86,18 +66,18 @@ EMcbStatus McbIntfWrite(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uin
 
                     ptInst->isIrqEvnt = false;
 
-                    McbIntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+                    Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
 
+                    /* Note: We prepare the next frame before the activation of the IRQ to
+                     * improve the timing of the system */
                     if ((ptInst->u16Sz - MCB_FRM_HEAD_SZ) >= MCB_FRM_CONFIG_SZ)
                     {
-                        McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, *ptCmd, MCB_FRM_SEG,
-                                &ptData[*ptSz - ptInst->u16Sz], NULL, 0, false);
+                        Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, *pu16Cmd, MCB_FRM_SEG,
+                                &pu16Data[*pu16Sz - ptInst->u16Sz], NULL, 0, false);
                     }
                     else
                     {
-                        /* Note: We prepare the next frame before the activation of the IRQ to
-                         * improve the timing of the system */
-                        McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0,
+                        Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0,
                                 false);
                     }
                     ptInst->eState = MCB_WRITE_REQUEST_ACK;
@@ -106,58 +86,57 @@ EMcbStatus McbIntfWrite(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uin
             break;
         case MCB_WRITE_REQUEST_ACK:
             /** Check if data is already available (IRQ) */
-            if ((McbIntfIsReady(ptInst) == true) && (ptInst->isIrqEvnt == true))
+            if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
             {
                 ptInst->eState = MCB_WRITE_ANSWER;
                 ptInst->u16Sz -= MCB_FRM_CONFIG_SZ;
                 ptInst->isIrqEvnt = false;
                 /* Now we just need to send the already built frame */
-                McbIntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+                Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
             }
             break;
         case MCB_WRITE_ANSWER:
             /** Wait until data is received */
-            if ((McbIntfIsReady(ptInst) == true) && (ptInst->isIrqEvnt == true))
+            if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
             {
                 /** Check reception */
-                if ((McbIntfCheckCrc(ptInst) == true) && (McbFrameGetAddr(&(ptInst->tRxfrm)) == *ptAddr))
+                if ((Mcb_IntfCheckCrc(ptInst->u16Id) != false) && (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == *pu16Addr))
                 {
-                    if (McbFrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_WRITE_ERROR)
+                    if (Mcb_FrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_WRITE_ERROR)
                     {
-                        *ptCmd = McbFrameGetCmd(&(ptInst->tRxfrm));
+                        *pu16Cmd = Mcb_FrameGetCmd(&(ptInst->tRxfrm));
                         ptInst->eState = MCB_CANCEL;
                     }
-                    else if (McbFrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_ACK)
+                    else if (Mcb_FrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_ACK)
                     {
-                        if (ptInst->isPending == true)
+                        if (ptInst->isPending != false)
                         {
                             /* Prepare next frame */
                             if (ptInst->u16Sz > MCB_FRM_CONFIG_SZ)
                             {
-                                McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, *ptCmd, MCB_FRM_SEG,
-                                        &ptData[*ptSz - ptInst->u16Sz], NULL, 0,
-                                        false);
+                                Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, *pu16Cmd, MCB_FRM_SEG,
+                                        &pu16Data[*pu16Sz - ptInst->u16Sz], NULL, 0, false);
                             }
                             else if (ptInst->u16Sz == MCB_FRM_CONFIG_SZ)
                             {
-                                McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, *ptCmd, MCB_FRM_NOTSEG,
-                                        &ptData[*ptSz - ptInst->u16Sz], NULL, 0,
-                                        false);
+                                Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, *pu16Cmd, MCB_FRM_NOTSEG,
+                                        &pu16Data[*pu16Sz - ptInst->u16Sz], NULL, 0, false);
                             }
                             else
                             {
                                 /* Dummy message, allow reception of last frame CRC */
                                 ptInst->isPending = false;
-                                McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL,
-                                        NULL, 0, false);
+                                Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL,
+                                        0,
+                                        false);
                             }
                             ptInst->eState = MCB_WRITE_REQUEST_ACK;
                         }
                         else
                         {
-                            *ptCmd = McbFrameGetCmd(&(ptInst->tRxfrm));
+                            *pu16Cmd = Mcb_FrameGetCmd(&(ptInst->tRxfrm));
                             ptInst->eState = MCB_SUCCESS;
-                            *ptSz = MCB_FRM_CONFIG_SZ;
+                            *pu16Sz = MCB_FRM_CONFIG_SZ;
                         }
                     }
                     else
@@ -173,10 +152,10 @@ EMcbStatus McbIntfWrite(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uin
             break;
         case MCB_CANCEL:
             /* Cancel init transaction */
-            if (McbIntfIsReady(ptInst) == true)
+            if (Mcb_IntfIsReady(ptInst->u16Id) != false)
             {
-                McbFrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
-                McbIntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+                Mcb_FrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
+                Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
                 ptInst->eState = MCB_ERROR;
             }
             break;
@@ -188,7 +167,8 @@ EMcbStatus McbIntfWrite(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uin
     return ptInst->eState;
 }
 
-EMcbStatus McbIntfRead(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uint16_t* ptCmd, uint16_t* ptData)
+Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t* pu16Node, uint16_t* pu16Addr, uint16_t* pu16Cmd,
+        uint16_t* pu16Data)
 {
     switch (ptInst->eState)
     {
@@ -197,30 +177,30 @@ EMcbStatus McbIntfRead(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uint
             ptInst->eState = MCB_READ_REQUEST;
             break;
         case MCB_READ_REQUEST:
-            if (McbIntfIRQRead(ptInst) == 1)
+            if (Mcb_IntfIRQRead(ptInst->u16Id) == MCB_HIGH)
             {
                 /* Send read request */
-                McbFrameCreate(&(ptInst->tTxfrm), *ptAddr, MCB_REQ_READ, MCB_FRM_NOTSEG, ptData, NULL, 0, false);
+                Mcb_FrameCreate(&(ptInst->tTxfrm), *pu16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, NULL, 0, false);
 
                 ptInst->isIrqEvnt = false;
 
-                McbIntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+                Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
 
                 ptInst->u16Sz = 0;
                 /* Note: We prepare the next frame before checking the IRQ to improve
                  * the timing of the system */
-                McbFrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
+                Mcb_FrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
                 ptInst->eState = MCB_READ_REQUEST_ACK;
             }
             break;
         case MCB_READ_REQUEST_ACK:
             /* Check if data is already available (IRQ) */
-            if ((McbIntfIsReady(ptInst) == true) && (ptInst->isIrqEvnt == true))
+            if ((Mcb_IntfIsReady(ptInst->u16Id) == true) && (ptInst->isIrqEvnt == true))
             {
                 /* Now we just need to send the already built frame */
                 ptInst->isIrqEvnt = false;
 
-                McbIntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+                Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
 
                 ptInst->eState = MCB_READ_ANSWER;
             }
@@ -230,20 +210,20 @@ EMcbStatus McbIntfRead(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uint
             if (ptInst->isIrqEvnt == true)
             {
                 /* Check reception */
-                if ((McbIntfCheckCrc(ptInst) == true) && (McbFrameGetAddr(&(ptInst->tRxfrm)) == *ptAddr))
+                if ((Mcb_IntfCheckCrc(ptInst->u16Id) == true) && (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == *pu16Addr))
                 {
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    size_t szReaded = McbFrameGetConfigData(&(ptInst->tRxfrm), ptData);
-                    ptData += szReaded;
-                    ptInst->u16Sz += szReaded;
-                    *ptCmd = McbFrameGetCmd(&(ptInst->tRxfrm));
-                    if (McbFrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_READ_ERROR)
+                    uint16_t u16SzRead = Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
+                    pu16Data += u16SzRead;
+                    ptInst->u16Sz += u16SzRead;
+                    *pu16Cmd = Mcb_FrameGetCmd(&(ptInst->tRxfrm));
+                    if (Mcb_FrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_READ_ERROR)
                     {
                         ptInst->eState = MCB_CANCEL;
                     }
-                    else if (McbFrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_ACK)
+                    else if (Mcb_FrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_ACK)
                     {
-                        if (McbFrameGetSegmented(&(ptInst->tRxfrm)) != false)
+                        if (Mcb_FrameGetSegmented(&(ptInst->tRxfrm)) != false)
                         {
                             ptInst->eState = MCB_READ_REQUEST_ACK;
                         }
@@ -265,10 +245,10 @@ EMcbStatus McbIntfRead(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uint
             break;
         case MCB_CANCEL:
             /* Cancel init transaction */
-            if (McbIntfIsReady(ptInst) == true)
+            if (Mcb_IntfIsReady(ptInst->u16Id) == true)
             {
-                McbFrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
-                McbIntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+                Mcb_FrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
+                Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
                 ptInst->eState = MCB_ERROR;
             }
             break;
@@ -280,22 +260,31 @@ EMcbStatus McbIntfRead(McbIntf* ptInst, uint16_t* ptNode, uint16_t* ptAddr, uint
     return ptInst->eState;
 }
 
-EMcbStatus McbIntfCyclicSpiTranfer(McbIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf)
+void Mcb_IntfIRQEvent(Mcb_TIntf* ptInst)
+{
+    ptInst->isIrqEvnt = true;
+}
+
+void Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* ptInFrame, Mcb_TFrame* ptOutFrame)
+{
+    Mcb_IntfSPITransfer(ptInst->u16Id, ptInFrame->u16Buf, ptOutFrame->u16Buf, ptInFrame->u16Sz);
+}
+
+Mcb_EStatus Mcb_IntfCyclicSpiTranfer(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf)
 {
     switch (ptInst->eState)
     {
         case MCB_STANDBY:
             /* Wait fall IRQ indicating received data */
-            if (McbIntfIRQRead(ptInst) == 1)
+            if (Mcb_IntfIRQRead(ptInst->u16Id) == MCB_HIGH)
             {
-                McbFrameCreate(&(ptInst->tRxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, ptInBuf, ptOutBuf, 3,
-                        false);
+                Mcb_FrameCreate(&(ptInst->tRxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, ptInBuf, ptOutBuf, 3, false);
                 ptInst->eState = MCB_CYCLIC_ANSWER;
             }
             break;
         case MCB_CYCLIC_ANSWER:
             /** Wait until data is received */
-            if (McbIntfIsReady(ptInst) == true)
+            if (Mcb_IntfIsReady(ptInst->u16Id) == true)
             {
                 ptInst->eState = MCB_STANDBY;
             }
@@ -305,29 +294,4 @@ EMcbStatus McbIntfCyclicSpiTranfer(McbIntf* ptInst, uint16_t *ptInBuf, uint16_t 
     }
 
     return ptInst->eState;
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    switch (GPIO_Pin)
-    {
-        default:
-            //u16Irq = ENABLE;
-            break;
-    }
-}
-
-static uint8_t McbIntfIRQRead(const McbIntf* ptInst)
-{
-    return 0;
-}
-
-static bool McbIntfIsReady(const McbIntf* ptInst)
-{
-    return false;
-}
-
-static bool McbIntfCheckCrc(const McbIntf* ptInst)
-{
-    return false;
 }

@@ -7,8 +7,6 @@
  */
 
 #include "mcb_frame.h"
-#include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include "mcb_checksum.h"
 
@@ -51,11 +49,10 @@ typedef union
  * @retval result of the CRC 
  */ 
 uint16_t
-McbFrameCRC(const TMcbFrame* ptFrame);
+Mcb_FrameCRC(const Mcb_TFrame* ptFrame);
 
-int32_t McbFrameCreate(TMcbFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
-                    uint8_t u8Pending, const void* pCfgBuf, const void* pCyclicBuf,
-                    size_t szCyclic, bool calcCRC)
+int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
+        const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC)
 {
     int32_t err = 0;
 
@@ -70,7 +67,7 @@ int32_t McbFrameCreate(TMcbFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
         }
 
         /* Check dynamic buffer size */
-        if (szCyclic > 10)
+        if (u16SzCyclic > 10)
         {
             err = -2;
             break;
@@ -94,13 +91,13 @@ int32_t McbFrameCreate(TMcbFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
         }
 
 		memcpy(&tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], pCyclicBuf,
-              (sizeof(tFrame->u16Buf[0]) * szCyclic));
+              (sizeof(tFrame->u16Buf[0]) * u16SzCyclic));
 
-		tFrame->u16Sz = MCB_FRM_HEAD_SZ + MCB_FRM_CONFIG_SZ + szCyclic;
+        tFrame->u16Sz = MCB_FRM_HEAD_SZ + MCB_FRM_CONFIG_SZ + u16SzCyclic;
         if (calcCRC != false)
         {
             /* Compute CRC and add it to buffer */
-            tFrame->u16Buf[tFrame->u16Sz] = McbFrameCRC(tFrame);
+            tFrame->u16Buf[tFrame->u16Sz] = Mcb_FrameCRC(tFrame);
 			tFrame->u16Sz += MCB_FRM_CRC_SZ;
         }
         break;
@@ -109,7 +106,7 @@ int32_t McbFrameCreate(TMcbFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
     return err;
 }
 
-bool McbFrameGetSegmented(const TMcbFrame* tFrame)
+bool Mcb_FrameGetSegmented(const Mcb_TFrame* tFrame)
 {
     THeader tHeader;
 
@@ -118,7 +115,7 @@ bool McbFrameGetSegmented(const TMcbFrame* tFrame)
     return (bool)tHeader.u1Pending;
 }
 
-uint16_t McbFrameGetAddr(const TMcbFrame* tFrame)
+uint16_t Mcb_FrameGetAddr(const Mcb_TFrame* tFrame)
 {
     THeader tHeader;
 
@@ -127,7 +124,7 @@ uint16_t McbFrameGetAddr(const TMcbFrame* tFrame)
     return (uint16_t)tHeader.u12Addr;
 }
 
-uint8_t McbFrameGetCmd(const TMcbFrame* tFrame)
+uint8_t Mcb_FrameGetCmd(const Mcb_TFrame* tFrame)
 {
     THeader tHeader;
 
@@ -136,7 +133,7 @@ uint8_t McbFrameGetCmd(const TMcbFrame* tFrame)
     return (uint8_t)tHeader.u3Cmd;
 }
 
-uint16_t McbFrameGetConfigData(const TMcbFrame* tFrame, uint16_t* pu16Buf)
+uint16_t Mcb_FrameGetConfigData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf)
 {
     memcpy(pu16Buf, &tFrame->u16Buf[MCB_FRM_HEAD_SZ],
 			(sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
@@ -144,11 +141,11 @@ uint16_t McbFrameGetConfigData(const TMcbFrame* tFrame, uint16_t* pu16Buf)
     return MCB_FRM_CONFIG_SZ;
 }
 
-bool McbFrameCheckCRC(const TMcbFrame* tFrame)
+bool Mcb_FrameCheckCRC(const Mcb_TFrame* tFrame)
 {
     bool bCRC = true;
 
-    if (McbFrameCRC(tFrame) != 0)
+    if (Mcb_FrameCRC(tFrame) != 0)
     {
         bCRC = false;
     }
@@ -156,7 +153,7 @@ bool McbFrameCheckCRC(const TMcbFrame* tFrame)
     return bCRC;
 }
 
-uint16_t McbFrameCRC(const TMcbFrame* tFrame)
+uint16_t Mcb_FrameCRC(const Mcb_TFrame* tFrame)
 {
     uint16_t u16Crc = CRC_START_XMODEM;
 

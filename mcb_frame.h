@@ -10,7 +10,6 @@
 #define MCB_FRAME_H
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdbool.h>
 
 /** Ingenia protocol frame maximum buffer size */
@@ -55,7 +54,7 @@ typedef struct {
 	uint16_t u16Buf[MCB_FRM_MAX_DATA_SZ];
     /** Frame size */
 	uint16_t u16Sz;
-} TMcbFrame;
+} Mcb_TFrame;
 
 /**
  * Initialises an Ingenia High Speed Protocol frame.
@@ -83,9 +82,8 @@ typedef struct {
  * @return 0 success, error code otherwise
  */
 int32_t
-McbFrameCreate(TMcbFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
-            uint8_t u8Pending, const void* pCfgBuf, const void* pCyclicBuf, 
-            size_t szDyn, bool calcCRC);
+Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
+        const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC);
 
 /**
  * Returns the address of the header.
@@ -95,7 +93,7 @@ McbFrameCreate(TMcbFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
  * @return Address.
  */
 uint16_t
-McbFrameGetAddr(const TMcbFrame* tFrame);
+Mcb_FrameGetAddr(const Mcb_TFrame* tFrame);
 
 /**
  * Returns the command (request or reply) of the config data.
@@ -105,7 +103,7 @@ McbFrameGetAddr(const TMcbFrame* tFrame);
  * @return Command.
  */
 uint8_t
-McbFrameGetCmd(const TMcbFrame* tFrame);
+Mcb_FrameGetCmd(const Mcb_TFrame* tFrame);
 
 /**
  * Checks if the config data is segmented and requires further data.
@@ -115,7 +113,7 @@ McbFrameGetCmd(const TMcbFrame* tFrame);
  * @return true if config data is segmented.
  */
 bool
-McbFrameGetSegmented(const TMcbFrame* tFrame);
+Mcb_FrameGetSegmented(const Mcb_TFrame* tFrame);
 
 /**
  * Returns the config data of a frame.
@@ -127,7 +125,7 @@ McbFrameGetSegmented(const TMcbFrame* tFrame);
  * @return config data
  */
 uint16_t
-McbFrameGetConfigData(const TMcbFrame* tFrame, uint16_t* pu16Buf);
+Mcb_FrameGetConfigData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf);
 
 /**
  * Indicates if the crc for the input frame is correct
@@ -139,6 +137,6 @@ McbFrameGetConfigData(const TMcbFrame* tFrame, uint16_t* pu16Buf);
  *         false if crc is wrong
  */
 bool
-McbFrameCheckCRC(const TMcbFrame* tFrame);
+Mcb_FrameCheckCRC(const Mcb_TFrame* tFrame);
 
 #endif /* MCB_FRAME_H */
