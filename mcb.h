@@ -34,7 +34,7 @@ typedef enum
     MCB_MESSAGE_ERROR
 } Mcb_EReqStatus;
 
-/** Motion control but instance */
+/** Motion control bus instance */
 typedef struct
 {
     /** Indicates if mcb is in cyclic mode */

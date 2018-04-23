@@ -195,7 +195,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t* pu16Node, uint16_t* pu16Ad
             break;
         case MCB_READ_REQUEST_ACK:
             /* Check if data is already available (IRQ) */
-            if ((Mcb_IntfIsReady(ptInst->u16Id) == true) && (ptInst->isIrqEvnt == true))
+            if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
             {
                 /* Now we just need to send the already built frame */
                 ptInst->isIrqEvnt = false;
@@ -207,10 +207,10 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t* pu16Node, uint16_t* pu16Ad
             break;
         case MCB_READ_ANSWER:
             /** Wait until data is received */
-            if (ptInst->isIrqEvnt == true)
+            if (ptInst->isIrqEvnt != false)
             {
                 /* Check reception */
-                if ((Mcb_IntfCheckCrc(ptInst->u16Id) == true) && (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == *pu16Addr))
+                if ((Mcb_IntfCheckCrc(ptInst->u16Id) != false) && (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == *pu16Addr))
                 {
                     /* Copy read data to buffer - Also copy it in case of error msg */
                     uint16_t u16SzRead = Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
@@ -245,7 +245,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t* pu16Node, uint16_t* pu16Ad
             break;
         case MCB_CANCEL:
             /* Cancel init transaction */
-            if (Mcb_IntfIsReady(ptInst->u16Id) == true)
+            if (Mcb_IntfIsReady(ptInst->u16Id) != false)
             {
                 Mcb_FrameCreate(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, NULL, 0, false);
                 Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
@@ -284,7 +284,7 @@ Mcb_EStatus Mcb_IntfCyclicSpiTranfer(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint1
             break;
         case MCB_CYCLIC_ANSWER:
             /** Wait until data is received */
-            if (Mcb_IntfIsReady(ptInst->u16Id) == true)
+            if (Mcb_IntfIsReady(ptInst->u16Id) != false)
             {
                 ptInst->eState = MCB_STANDBY;
             }

@@ -54,7 +54,7 @@ Mcb_FrameCRC(const Mcb_TFrame* ptFrame);
 int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
         const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC)
 {
-    int32_t err = 0;
+    int32_t i32Err = 0;
 
     while (1)
     {
@@ -62,14 +62,14 @@ int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uin
         
         if (tFrame == NULL)
         {
-            err = -1;
+            i32Err = -1;
             break;
         }
 
         /* Check dynamic buffer size */
         if (u16SzCyclic > 10)
         {
-            err = -2;
+            i32Err = -2;
             break;
         }
         
@@ -81,13 +81,11 @@ int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uin
         /* Copy config & cyclic buffer (if any) */
         if (pCfgBuf != NULL)
         {
-			memcpy(&tFrame->u16Buf[MCB_FRM_CONFIG_IDX], pCfgBuf,
-					(sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
+            memcpy(&tFrame->u16Buf[MCB_FRM_CONFIG_IDX], pCfgBuf, (sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
         }
         else
         {
-			memset(&tFrame->u16Buf[MCB_FRM_CONFIG_IDX], 0,
-					(sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
+            memset(&tFrame->u16Buf[MCB_FRM_CONFIG_IDX], 0, (sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
         }
 
 		memcpy(&tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], pCyclicBuf,
@@ -103,7 +101,7 @@ int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uin
         break;
     }
 
-    return err;
+    return i32Err;
 }
 
 bool Mcb_FrameGetSegmented(const Mcb_TFrame* tFrame)
