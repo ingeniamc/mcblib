@@ -10,7 +10,6 @@
 #ifndef MCB_H
 #define MCB_H
 
-#include <stdint.h>
 #include "mcb_intf.h"
 
 #define HSP_MAX_DATA_SZ 128
@@ -23,7 +22,7 @@ typedef enum
     MCB_BLOCKING = 0,
     /* Non Blocking mode, if not ready, return state */
     MCB_NON_BLOCKING
-} EMcbMode;
+} Mcb_EMode;
 
 typedef enum
 {
@@ -33,18 +32,18 @@ typedef enum
     MCB_MESSAGE_SUCCESS,
     /* Request error */
     MCB_MESSAGE_ERROR
-} EMcbReqStatus;
+} Mcb_EReqStatus;
 
-/** Motion control but instance */
+/** Motion control bus instance */
 typedef struct
 {
     /** Indicates if mcb is in cyclic mode */
     bool isCyclic;
     /** Linked Hsp module */
-    McbIntf tIntf;
+    Mcb_TIntf tIntf;
     /** Transmission mode */
-    EMcbMode eMode;
-} McbInst;
+    Mcb_EMode eMode;
+} Mcb_TInst;
 
 /** Frame data struct */
 typedef struct
@@ -60,8 +59,8 @@ typedef struct
     /* Static data */
     uint16_t u16Data[HSP_MAX_DATA_SZ];
     /* Message status */
-    EMcbReqStatus eStatus;
-} McbMsg;
+    Mcb_EReqStatus eStatus;
+} Mcb_TMsg;
 
 /** 
  * Initialization of a mcb instance 
@@ -71,10 +70,10 @@ typedef struct
  * @param[in] eMode
  *  Indicates if blocking or non-blocking mode is applied
  */
-void McbInit(McbInst* ptInst,  EMcbMode eMode);
+void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id);
 
 /** Deinitializes a mcb instance */
-void McbDeinit(McbInst* ptInst);
+void Mcb_Deinit(Mcb_TInst* ptInst);
 
 /**
  * Generic write function
@@ -86,8 +85,8 @@ void McbDeinit(McbInst* ptInst);
  * @param[in] u32Timeout
  *  Timeout duration
  */
-EMcbReqStatus
-McbWrite(McbInst* ptInst, McbMsg* mcbMsg, uint32_t u32Timeout);
+Mcb_EReqStatus
+Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout);
 
 /**
  * Generic read function
@@ -99,23 +98,23 @@ McbWrite(McbInst* ptInst, McbMsg* mcbMsg, uint32_t u32Timeout);
  * @param[in] u32Timeout
  *  Timeout duration
  */
-EMcbReqStatus
-McbRead(McbInst* ptInst, McbMsg* mcbMsg, uint32_t u32Timeout);
+Mcb_EReqStatus
+Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout);
 
 /** Motion read/write functions */
 
 /** Mapping functions */
 void*
-McbTxMap(McbInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
+Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
 void*
-McbRxMap(McbInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
+Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
 
 /** Enabling cyclic mode.
  * Blocking function, while the config is written into driver. */
 int32_t
-McbEnableCyclic(McbInst* ptInst);
+Mcb_EnableCyclic(Mcb_TInst* ptInst);
 /** Disable cyclic mode. */
 int32_t
-McbDisableCyclic(McbInst* ptInst);
+Mcb_DisableCyclic(Mcb_TInst* ptInst);
 
 #endif
