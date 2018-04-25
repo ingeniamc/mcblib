@@ -9,12 +9,6 @@
 
 #include "mcb_usr.h"
 
-__attribute__((weak))Mcb_EPinVal Mcb_IntfIRQRead(uint16_t u16Id)
-{
-    /** Read linked gpio state */
-    return 0;
-}
-
 __attribute__((weak))bool Mcb_IntfIsReady(uint16_t u16Id)
 {
     /** Check if SPI instance is ready for initiate a new transmission */

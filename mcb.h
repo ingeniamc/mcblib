@@ -24,27 +24,6 @@ typedef enum
     MCB_NON_BLOCKING
 } Mcb_EMode;
 
-typedef enum
-{
-    /* Message not ready */
-    MCB_MESSAGE_NOT_READY = 0,
-    /* Success request */
-    MCB_MESSAGE_SUCCESS,
-    /* Request error */
-    MCB_MESSAGE_ERROR
-} Mcb_EReqStatus;
-
-/** Motion control bus instance */
-typedef struct
-{
-    /** Indicates if mcb is in cyclic mode */
-    bool isCyclic;
-    /** Linked Hsp module */
-    Mcb_TIntf tIntf;
-    /** Transmission mode */
-    Mcb_EMode eMode;
-} Mcb_TInst;
-
 /** Frame data struct */
 typedef struct
 {
@@ -59,8 +38,29 @@ typedef struct
     /* Static data */
     uint16_t u16Data[HSP_MAX_DATA_SZ];
     /* Message status */
-    Mcb_EReqStatus eStatus;
+    Mcb_EStatus eStatus;
 } Mcb_TMsg;
+
+/** Motion control bus instance */
+typedef struct
+{
+    /** Indicates if mcb is in cyclic mode */
+    bool isCyclic;
+    /** Indicates the timeout applied for blocking transmissions */
+    uint32_t u32Timeout;
+    /** Linked Hsp module */
+    Mcb_TIntf tIntf;
+    /** Transmission mode */
+    Mcb_EMode eMode;
+    /** Config transmission Msg */
+    Mcb_TMsg tConfigTx;
+    /** Config reception Msg */
+    Mcb_TMsg tConfigRx;
+    /** Cyclic transmission buffer */
+    uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
+    /** Cyclic reception buffer */
+    uint16_t u16CyclicRx[MCB_FRM_MAX_CYCLIC_SZ];
+} Mcb_TInst;
 
 /** 
  * Initialization of a mcb instance 
@@ -69,8 +69,12 @@ typedef struct
  *  Instance to be initialized
  * @param[in] eMode
  *  Indicates if blocking or non-blocking mode is applied
+ * @param[in] u16Id
+ *  Assigns an Id to the instance
+ * @param[in] u32Timeout
+ *  Indicates the applied timeout for blocking tranmissions in milliseconds
  */
-void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id);
+void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, uint32_t u32Timeout);
 
 /** Deinitializes a mcb instance */
 void Mcb_Deinit(Mcb_TInst* ptInst);
@@ -85,8 +89,8 @@ void Mcb_Deinit(Mcb_TInst* ptInst);
  * @param[in] u32Timeout
  *  Timeout duration
  */
-Mcb_EReqStatus
-Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout);
+Mcb_EStatus
+Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 
 /**
  * Generic read function
@@ -98,8 +102,8 @@ Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout);
  * @param[in] u32Timeout
  *  Timeout duration
  */
-Mcb_EReqStatus
-Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout);
+Mcb_EStatus
+Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 
 /** Motion read/write functions */
 
@@ -113,8 +117,12 @@ Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
  * Blocking function, while the config is written into driver. */
 int32_t
 Mcb_EnableCyclic(Mcb_TInst* ptInst);
+
 /** Disable cyclic mode. */
 int32_t
 Mcb_DisableCyclic(Mcb_TInst* ptInst);
+
+void
+Mcb_CyclicProcess(Mcb_TInst* ptInst);
 
 #endif

@@ -73,17 +73,6 @@ typedef struct
 } Mcb_TIntf;
 
 /**
- * Read the value of the assigned pin to the IRQ functionality
- *
- * @param[in] u16Id
- *  Id of the McbIntf used to identify multiple instances
- *
- * @retval Value of the pin
- */
-Mcb_EPinVal
-Mcb_IntfIRQRead(uint16_t u16Id);
-
-/**
  * Sets the IRQ event flag used internally for protocol synchronization
  *
  * @note This function must be included into an external rising edge interrupt

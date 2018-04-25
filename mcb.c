@@ -10,10 +10,11 @@
 #include "mcb.h"
 #include <string.h>
 
-void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id)
+void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, uint32_t u32Timeout)
 {
     ptInst->isCyclic = false;
     ptInst->eMode = eMode;
+    ptInst->u32Timeout = u32Timeout;
 
     ptInst->tIntf.u16Id = u16Id;
     Mcb_IntfInit(&ptInst->tIntf);
@@ -26,10 +27,9 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
     Mcb_IntfDeinit(&ptInst->tIntf);
 }
 
-Mcb_EReqStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout)
+Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    Mcb_EReqStatus eResult = MCB_MESSAGE_ERROR;
-    Mcb_EStatus eStatus;
+    Mcb_EStatus eStatus = MCB_ERROR;
     uint16_t u16sz;
 
     if (ptInst->isCyclic == false)
@@ -40,37 +40,34 @@ Mcb_EReqStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeou
 
             do
             {
-                eStatus = Mcb_IntfWrite(&ptInst->tIntf, &mcbMsg->u16Node, &mcbMsg->u16Addr, &mcbMsg->u16Cmd,
-                        &mcbMsg->u16Data[0], &mcbMsg->u16Size);
+                eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
+                        &pMcbMsg->u16Size);
 
-            } while ((eStatus != MCB_ERROR) && (eStatus != MCB_SUCCESS) && ((Mcb_GetMillis() - u32Millis) < u32Timeout));
+                if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+                {
+                    eStatus = MCB_ERROR;
+                    break;
+                }
+
+            } while ((eStatus != MCB_ERROR) && (eStatus != MCB_SUCCESS));
         }
         else
         {
-            /** No blocking mode */
-            eStatus = Mcb_IntfWrite(&ptInst->tIntf, &mcbMsg->u16Node, &mcbMsg->u16Addr, &mcbMsg->u16Cmd,
-                    &mcbMsg->u16Data[0], &u16sz);
-        }
-        if (eStatus == MCB_SUCCESS)
-        {
-            eResult = MCB_MESSAGE_SUCCESS;
-        }
-        else
-        {
-            eResult = MCB_MESSAGE_ERROR;
+            /** Non blocking mode */
+            eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0], &u16sz);
         }
     }
     else
     {
         /* Cyclic mode */
+        memcpy(&ptInst->tConfigTx, &pMcbMsg, sizeof(Mcb_TMsg));
     }
 
-    return eResult;
+    return eStatus;
 }
 
-Mcb_EReqStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout)
+Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    Mcb_EReqStatus eResult = 0;
     Mcb_EStatus eStatus = MCB_ERROR;
 
     if (ptInst->isCyclic == false)
@@ -80,45 +77,33 @@ Mcb_EReqStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg, uint32_t u32Timeout
             uint32_t u32Millis = Mcb_GetMillis();
             do
             {
-                eStatus = Mcb_IntfRead(&ptInst->tIntf, &mcbMsg->u16Node, &mcbMsg->u16Addr, &mcbMsg->u16Cmd,
-                        &mcbMsg->u16Data[0]);
+                eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
+                        &pMcbMsg->u16Size);
 
-            } while ((eStatus != MCB_ERROR) && (eStatus != MCB_SUCCESS)
-                    && ((Mcb_GetMillis() - u32Millis) < u32Timeout));
+                if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+                {
+                    eStatus = MCB_ERROR;
+                    break;
+                }
 
-            mcbMsg->u16Size = ptInst->tIntf.u16Sz;
+            } while ((eStatus != MCB_ERROR) && (eStatus != MCB_SUCCESS));
+
+            pMcbMsg->u16Size = ptInst->tIntf.u16Sz;
         }
         else
         {
-            /** No blocking mode */
-            eStatus = Mcb_IntfRead(&ptInst->tIntf, &mcbMsg->u16Node, &mcbMsg->u16Addr, &mcbMsg->u16Cmd,
-                    &mcbMsg->u16Data[0]);
-        }
-
-        if (eStatus == MCB_SUCCESS)
-        {
-            eResult = MCB_MESSAGE_SUCCESS;
-        }
-        else
-        {
-            eResult = MCB_MESSAGE_ERROR;
+            /** Non blocking mode */
+            eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
+                    &pMcbMsg->u16Size);
         }
     }
     else
     {
         /* Cyclic mode */
+        memcpy(&ptInst->tConfigTx, &pMcbMsg, sizeof(Mcb_TMsg));
     }
 
-    if (eStatus == MCB_SUCCESS)
-    {
-        eResult = MCB_MESSAGE_SUCCESS;
-    }
-    else
-    {
-        eResult = MCB_MESSAGE_ERROR;
-    }
-
-    return eResult;
+    return eStatus;
 }
 
 void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t addr, uint16_t u16Sz)
@@ -139,19 +124,17 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
     if (ptInst->isCyclic == false)
     {
         uint16_t u16Sz;
-        Mcb_TMsg mcbMsg;
-        mcbMsg.u16Addr = 0x640;
-        mcbMsg.u16Cmd = 1;
-        mcbMsg.u16Data[0] = 2;
-        mcbMsg.u16Data[1] = 0;
-        mcbMsg.u16Data[2] = 0;
-        mcbMsg.u16Data[3] = 0;
+        Mcb_TMsg pMcbMsg;
+        pMcbMsg.u16Addr = 0x640;
+        pMcbMsg.u16Cmd = 1;
+        pMcbMsg.u16Data[0] = 2;
+        pMcbMsg.u16Data[1] = 0;
+        pMcbMsg.u16Data[2] = 0;
+        pMcbMsg.u16Data[3] = 0;
         u16Sz = 4;
         do
         {
-            eStatus = Mcb_IntfWrite(&ptInst->tIntf, &mcbMsg.u16Node, &mcbMsg.u16Addr, &mcbMsg.u16Cmd,
-                    &mcbMsg.u16Data[0],
-                    &u16Sz);
+            eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg.u16Node, pMcbMsg.u16Addr, &pMcbMsg.u16Data[0], &u16Sz);
 
         } while ((eStatus != MCB_ERROR) && (eStatus != MCB_SUCCESS));
     }
@@ -167,5 +150,15 @@ int32_t Mcb_DisableCyclic(Mcb_TInst* ptInst)
     }
 
     return 0;
+}
+
+void Mcb_CyclicProcess(Mcb_TInst* ptInst)
+{
+    if (ptInst->isCyclic != false)
+    {
+        Mcb_IntfCyclicTranfer(&ptInst->tIntf, ptInst->tConfigTx.u16Node, ptInst->tConfigTx.u16Addr,
+                ptInst->tConfigTx.u16Cmd, ptInst->tConfigTx.u16Data, &ptInst->tConfigTx.u16Size, ptInst->u16CyclicTx,
+                ptInst->u16CyclicRx);
+    }
 }
 

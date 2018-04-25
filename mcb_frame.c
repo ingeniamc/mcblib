@@ -36,9 +36,6 @@ typedef union
 #define MCB_FRM_HDR_SZ         1U
 /** Ingenia protocol frame CRC size */
 #define MCB_FRM_CRC_SZ         1U
-/** Ingenia protocol frame dynamic buffer size */
-#define MCB_FRM_MAX_CYCLIC_SZ   (MCB_FRM_MAX_DATA_SZ - MCB_FRM_HDR_SZ - \
-                                 MCB_FRM_CONFIG_SZ - MCB_FRM_CRC_SZ)
 
 /**
  * Computes the CRC of the input frame

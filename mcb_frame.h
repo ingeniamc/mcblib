@@ -12,15 +12,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/** Ingenia protocol frame maximum buffer size */
-#define MCB_FRM_MAX_DATA_SZ     128U
+/** Motion control frame maximum buffer size */
+#define MCB_FRM_MAX_DATA_SZ     16U
 
-/** Ingenia protocol frame config buffer header size */
+/** Motion control frame config buffer header size */
 #define MCB_FRM_HEAD_SZ			1U
-/** Ingenia protocol frame config buffer size */
+/** Motion control frame config buffer size */
 #define MCB_FRM_CONFIG_SZ       4U
-/** Ingenia protocol frame CRC size */
+/** Motion control frame CRC size */
 #define MCB_FRM_CRC_SZ          1U
+/** Motion control frame MAX cyclic size */
+#define MCB_FRM_MAX_CYCLIC_SZ   10U
 
 /** Header position on raw buffer */
 #define MCB_FRM_HEAD_IDX        0U
