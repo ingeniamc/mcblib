@@ -42,7 +42,9 @@ typedef struct
 } Mcb_TMsg;
 
 /** Motion control bus instance */
-typedef struct
+typedef struct Mcb_TInst Mcb_TInst;
+
+struct Mcb_TInst
 {
     /** Indicates if mcb is in cyclic mode */
     bool isCyclic;
@@ -53,14 +55,16 @@ typedef struct
     /** Transmission mode */
     Mcb_EMode eMode;
     /** Config transmission Msg */
-    Mcb_TMsg tConfigTx;
-    /** Config reception Msg */
-    Mcb_TMsg tConfigRx;
+    Mcb_TMsg tConfig;
     /** Cyclic transmission buffer */
     uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
     /** Cyclic reception buffer */
     uint16_t u16CyclicRx[MCB_FRM_MAX_CYCLIC_SZ];
-} Mcb_TInst;
+    /** Cyclic transmission size */
+    uint16_t u16CyclicSize;
+    /** Callback to config over cyclic frame reception */
+    void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+};
 
 /** 
  * Initialization of a mcb instance 
@@ -104,6 +108,18 @@ Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
  */
 Mcb_EStatus
 Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+
+/**
+ * Attach an user callback to the reception event of a config frame over
+ * Cyclic mode
+ *
+ * @param[in] ptInst
+ *  Instance where callback is going to be linked
+ * @param[in] Evnt
+ *  User callback to be linked
+ */
+void
+Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg));
 
 /** Motion read/write functions */
 

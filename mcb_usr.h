@@ -32,24 +32,12 @@ typedef enum
     MCB_STANDBY,
     /** Sending a write request */
     MCB_WRITE_REQUEST,
-    /** Waiting for write request ack */
-    MCB_WRITE_REQUEST_ACK,
     /** Processing answer from write request */
     MCB_WRITE_ANSWER,
-    /** Processing write */
-    MCB_WRITE_ANSWER_PENDING,
     /** Sending a read request */
     MCB_READ_REQUEST,
-    /** Waiting for read request ack */
-    MCB_READ_REQUEST_ACK,
     /** Processing answer from read request */
     MCB_READ_ANSWER,
-    /** Processing request */
-    MCB_READ_REQUEST_PENDING,
-    /** Waiting and processing slave cyclic frame */
-    MCB_CYCLIC_ANSWER,
-    /** Cancel transaction */
-    MCB_CANCEL,
     /** Transaction error */
     MCB_ERROR
 } Mcb_EStatus;
@@ -60,6 +48,8 @@ typedef struct
     uint16_t u16Id;
     /** Indicates the state of the communication bus */
     Mcb_EStatus eState;
+    /** Indicates if a config request has been requested over cyclic frames */
+    bool isCfgOverCyclic;
     /** IRQ Event signal */
     bool isIrqEvnt;
     /** Frame pool for holding tx data */

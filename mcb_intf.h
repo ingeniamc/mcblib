@@ -28,6 +28,6 @@ Mcb_EStatus
 Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
 Mcb_EStatus
-Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t u16Cmd, uint16_t* pu16Data,
-        uint16_t* pu16Sz, uint16_t *ptInBuf, uint16_t *ptOutBuf);
+Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
+        uint16_t* pu16CfgSz, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz);
 #endif /* MCB_INTF_H */

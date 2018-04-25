@@ -45,6 +45,8 @@
 #define MCB_REP_READ_ERROR      5U
 /** Error detected during write */
 #define MCB_REP_WRITE_ERROR     6U
+/** General Error */
+#define MCB_REP_ERROR           4U
 
 /** Ingenia protocol segmentation definitions */
 #define MCB_FRM_NOTSEG          0U
@@ -59,33 +61,43 @@ typedef struct {
 } Mcb_TFrame;
 
 /**
- * Initialises an Ingenia High Speed Protocol frame.
+ * Creates a configuration MCB frame.
  *
  * @param [out] tFrame
  *      Destination frame
- * @param [in] u16Node
- *      Destination Node.
- * @param [in] u16SubNode
- *      Destination internal network node.
  * @param [in] u16Addr
- *      Destination address.
+ *      Register address.
  * @param [in] u16Cmd
  *      Frame command (request or reply)
  * @param [in] u8Pending
  *      Indicates if the config data will be segmented.
  * @param [in] pCfgBuf
  *      Buffer with config data.
- * @param [in] pCyclicBuf
- *      Buffer with cyclic data.
- * @param [in] szDyn
- *      Size of the cyclic data.
  * @param [in] calcCRC
  * 		Indicates if CRC field will be calculated.
  * @return 0 success, error code otherwise
  */
 int32_t
-Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
-        const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC);
+Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
+bool calcCRC);
+
+/**
+ * Add cyclic data into a pre-created config frame
+ *
+ * @note Mcb_FrameCreateConfig has to be used before this function
+ *
+ * @param [out] tFrame
+ *      Destination frame
+ * @param [in] pCyclicBuf
+ *      Buffer with cyclic data.
+ * @param [in] u16SzCyclic
+ *      Size of the cyclic data.
+ * @param [in] calcCRC
+ *      Indicates if CRC field will be calculated.
+ * @return 0 success, error code otherwise
+ */
+int32_t
+Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC);
 
 /**
  * Returns the address of the header.
@@ -128,6 +140,18 @@ Mcb_FrameGetSegmented(const Mcb_TFrame* tFrame);
  */
 uint16_t
 Mcb_FrameGetConfigData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf);
+
+/**
+ * Returns the cyclic data of a frame.
+ *
+ * @param [in] tFrame
+ *  Input frame.
+ * @param [out] pu16Buf
+ *  Pointer to config data
+ * @return cyclic data
+ */
+uint16_t
+Mcb_FrameGetCyclicData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf, uint16_t u16Size);
 
 /**
  * Indicates if the crc for the input frame is correct
