@@ -206,23 +206,40 @@ static bool Mcb_IntfWriteProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* 
             break;
         case MCB_WRITE_ANSWER:
             /** Check reception */
-            if ((Mcb_IntfCheckCrc(ptInst->u16Id) != false) && (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
-                    && (Mcb_FrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_ACK))
+            if (Mcb_IntfCheckCrc(ptInst->u16Id) != false)
             {
-                if (ptInst->isPending != false)
+                switch (Mcb_FrameGetCmd(&(ptInst->tRxfrm)))
                 {
-                    ptInst->eState = MCB_WRITE_REQUEST;
-                }
-                else
-                {
-                    ptInst->eState = MCB_SUCCESS;
+                    case MCB_REP_ACK:
+                        if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
+                        {
+                            if (ptInst->isPending != false)
+                            {
+                                ptInst->eState = MCB_WRITE_REQUEST;
+                            }
+                            else
+                            {
+                                ptInst->eState = MCB_SUCCESS;
+                            }
+                        }
+                        break;
+                    case MCB_REQ_IDLE:
+                        ptInst->eState = MCB_WRITE_REQUEST;
+                        break;
+                    default:
+                        ptInst->eState = MCB_ERROR;
+                        break;
                 }
             }
             else
             {
+                ptInst->eState = MCB_ERROR;
+            }
+
+            if (ptInst->eState == MCB_ERROR)
+            {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
                 isNewData = true;
-                ptInst->eState = MCB_ERROR;
             }
             break;
         default:
@@ -255,26 +272,43 @@ static bool Mcb_IntfReadProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* p
             break;
         case MCB_READ_ANSWER:
             /** Check reception */
-            if ((Mcb_IntfCheckCrc(ptInst->u16Id) != false) && (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
-                    && (Mcb_FrameGetCmd(&(ptInst->tRxfrm)) == MCB_REP_ACK))
+            if (Mcb_IntfCheckCrc(ptInst->u16Id) != false)
             {
-                /* Copy read data to buffer - Also copy it in case of error msg */
-                ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
+                switch (Mcb_FrameGetCmd(&(ptInst->tRxfrm)))
+                {
+                    case MCB_REP_ACK:
+                        /* Copy read data to buffer - Also copy it in case of error msg */
+                        ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
 
-                if (Mcb_FrameGetSegmented(&(ptInst->tRxfrm)) != false)
-                {
-                    ptInst->eState = MCB_READ_REQUEST;
-                }
-                else
-                {
-                    ptInst->eState = MCB_SUCCESS;
+                        if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
+                        {
+                            if (Mcb_FrameGetSegmented(&(ptInst->tRxfrm)) != false)
+                            {
+                                ptInst->eState = MCB_READ_REQUEST;
+                            }
+                            else
+                            {
+                                ptInst->eState = MCB_SUCCESS;
+                            }
+                        }
+                        break;
+                    case MCB_REQ_IDLE:
+                        ptInst->eState = MCB_READ_REQUEST;
+                        break;
+                    default:
+                        ptInst->eState = MCB_ERROR;
+                        break;
                 }
             }
             else
             {
+                ptInst->eState = MCB_ERROR;
+            }
+
+            if (ptInst->eState == MCB_ERROR)
+            {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
                 isNewData = true;
-                ptInst->eState = MCB_ERROR;
             }
             break;
         default:
