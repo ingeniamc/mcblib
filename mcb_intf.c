@@ -258,6 +258,7 @@ static bool Mcb_IntfReadProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* p
     {
         ptInst->isPending = true;
         ptInst->eState = MCB_READ_REQUEST;
+        ptInst->u16Sz = 0;
     }
 
     switch (ptInst->eState)
@@ -295,6 +296,7 @@ static bool Mcb_IntfReadProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* p
                             }
                             else
                             {
+                                *pu16Sz = ptInst->u16Sz;
                                 ptInst->eState = MCB_SUCCESS;
                             }
                         }
