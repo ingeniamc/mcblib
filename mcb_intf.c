@@ -264,7 +264,14 @@ static bool Mcb_IntfReadProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* p
     {
         case MCB_READ_REQUEST:
             /* Send read request */
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, false);
+            if (ptInst->isPending != false)
+            {
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, false);
+            }
+            else
+            {
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+            }
 
             ptInst->isIrqEvnt = false;
             isNewData = true;
@@ -294,6 +301,7 @@ static bool Mcb_IntfReadProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* p
                         break;
                     case MCB_REQ_IDLE:
                         ptInst->eState = MCB_READ_REQUEST;
+                        ptInst->isPending = false;
                         break;
                     default:
                         ptInst->eState = MCB_ERROR;

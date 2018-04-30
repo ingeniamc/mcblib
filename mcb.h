@@ -12,9 +12,9 @@
 
 #include "mcb_intf.h"
 
-#define HSP_MAX_DATA_SZ 128
+#define MCB_MAX_DATA_SZ 128
 
-#define DFLT_TIMEOUT 100
+#define MCB_DFLT_TIMEOUT 100
 
 typedef enum
 {
@@ -36,7 +36,7 @@ typedef struct
     /* Message total size (bytes) */
     uint16_t u16Size;
     /* Static data */
-    uint16_t u16Data[HSP_MAX_DATA_SZ];
+    uint16_t u16Data[MCB_MAX_DATA_SZ];
     /* Message status */
     Mcb_EStatus eStatus;
 } Mcb_TMsg;
