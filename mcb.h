@@ -16,6 +16,8 @@
 
 #define MCB_DFLT_TIMEOUT 100
 
+#define MAX_MAPPED_REG (uint8_t)8U
+
 typedef enum
 {
     /* Blocking mode, each request block until response */
@@ -41,6 +43,17 @@ typedef struct
     Mcb_EStatus eStatus;
 } Mcb_TMsg;
 
+/** List struct to store mapped registers */
+typedef struct
+{
+    /** Number of available register on the list */
+    uint8_t u8Mapped;
+    /** Array containing key of mapped registers */
+    uint16_t u16Addr[MAX_MAPPED_REG ];
+    /** Array containing size of mapped registers */
+    uint16_t u16Sz[MAX_MAPPED_REG ];
+} Mcb_TMappingList;
+
 /** Motion control bus instance */
 typedef struct Mcb_TInst Mcb_TInst;
 
@@ -56,12 +69,16 @@ struct Mcb_TInst
     Mcb_EMode eMode;
     /** Config transmission Msg */
     Mcb_TMsg tConfig;
-    /** Cyclic transmission buffer */
+    /** Cyclic transmission (from master point of view) buffer */
     uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
-    /** Cyclic reception buffer */
+    /** Cyclic reception (from master point of view) buffer */
     uint16_t u16CyclicRx[MCB_FRM_MAX_CYCLIC_SZ];
     /** Cyclic transmission size */
     uint16_t u16CyclicSize;
+    /** RX mapping (from slave point of view) list */
+    Mcb_TMappingList tCyclicRxList;
+    /** TX mapping (from slave point of view) list */
+    Mcb_TMappingList tCyclicTxList;
     /** Callback to config over cyclic frame reception */
     void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
@@ -80,7 +97,12 @@ struct Mcb_TInst
  */
 void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, uint32_t u32Timeout);
 
-/** Deinitializes a mcb instance */
+/**
+ * Deinitializes a mcb instance
+ *
+ * @param[in] ptInst
+ *  Instance to be deinitialized
+ */
 void Mcb_Deinit(Mcb_TInst* ptInst);
 
 /**
@@ -121,23 +143,109 @@ Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 void
 Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg));
 
-/** Motion read/write functions */
-
-/** Mapping functions */
+/**
+ * Map a Tx cyclic register into the cyclic buffer
+ *
+ * @note blocking function
+ *
+ * @param[in] ptInst
+ *  Mcb instance where register is mapped
+ * @param[in] u16Addr
+ *  Key address of the register to be mapped
+ * @param[in] u16Sz
+ *  Size (bytes) of the register to be mapped
+ *
+ * @retval Pointer to cyclic buffer where data is located
+ */
 void*
 Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
+
+/**
+ * Map a Rx cyclic register into the cyclic buffer
+ *
+ * @note blocking function
+ *
+ * @param[in] ptInst
+ *  Mcb instance where register is mapped
+ * @param[in] u16Addr
+ *  Key address of the register to be mapped
+ * @param[in] u16Sz
+ *  Size (bytes) of the register to be mapped
+ *
+ * @retval Pointer to cyclic buffer where data is located
+ */
 void*
 Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
 
-/** Enabling cyclic mode.
- * Blocking function, while the config is written into driver. */
+/**
+ * Unmap the last Tx mapped register
+ *
+ * @note blocking function
+ *
+ * @param[in] ptInst
+ *  Mcb instance where register is mapped
+ *
+ * @retval Number of remaining mapped registers
+ */
+uint8_t
+Mcb_TxUnmap(Mcb_TInst* ptInst);
+
+/**
+ * Unmap the last Rx mapped register
+ *
+ * @note blocking function
+ *
+ * @param[in] ptInst
+ *  Mcb instance where register is mapped
+ *
+ * @retval Number of remaining mapped registers
+ */
+uint8_t
+Mcb_RxUnmap(Mcb_TInst* ptInst);
+
+/**
+ * Unmap All the mapped register
+ *
+ * @note blocking function
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ */
+void
+Mcb_UnmapAll(Mcb_TInst* ptInst);
+
+/**
+ * Enables cyclic mode.
+ *
+ * @note Blocking function, while the config is written into driver.
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ *
+ *  @retval 0 if ok, errorcode otherwise
+ */
 int32_t
 Mcb_EnableCyclic(Mcb_TInst* ptInst);
 
-/** Disable cyclic mode. */
+/**
+ * Disables cyclic mode.
+ *
+ * @note This function only sets up the config frame, but
+ *       data is not transmitted because cyclic mode is enabled and
+ *       config frames must be transmitted through cyclic transfers.
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ */
 int32_t
 Mcb_DisableCyclic(Mcb_TInst* ptInst);
 
+/**
+ * Function to be called cyclically when cyclic mode is enabled
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ */
 void
 Mcb_CyclicProcess(Mcb_TInst* ptInst);
 
