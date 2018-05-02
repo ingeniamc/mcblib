@@ -35,7 +35,7 @@ typedef struct
     uint16_t u16Addr;
     /* Command data */
     uint16_t u16Cmd;
-    /* Message total size (bytes) */
+    /* Message total size (words) */
     uint16_t u16Size;
     /* Static data */
     uint16_t u16Data[MCB_MAX_DATA_SZ];

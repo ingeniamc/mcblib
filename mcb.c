@@ -498,7 +498,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             switch (tMcbMsg.eStatus)
             {
                 case MCB_SUCCESS:
-                    ptInst->isCyclic = true;
+                    /* Nothing*/
                     break;
                 default:
                     i32Result = -3;
@@ -509,14 +509,17 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         /** Check bigger mapping and set up generated frame size */
         if (i32Result == 0)
         {
+            /** Convert bytes into words */
             if (u16RxSz > u16TxSz)
             {
-                ptInst->u16CyclicSize = u16RxSz;
+                ptInst->u16CyclicSize = u16RxSz >> 1;
             }
             else
             {
-                ptInst->u16CyclicSize = u16TxSz;
+                ptInst->u16CyclicSize = u16TxSz >> 1;
             }
+
+            ptInst->isCyclic = true;
         }
 
         i32Result = ptInst->u16CyclicSize;
