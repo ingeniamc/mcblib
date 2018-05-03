@@ -14,7 +14,7 @@
 
 #define MCB_MAX_DATA_SZ 128
 
-#define MCB_DFLT_TIMEOUT 100
+#define MCB_DFLT_TIMEOUT 500
 
 typedef enum
 {

@@ -219,6 +219,7 @@ static bool Mcb_IntfWriteProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* 
                             }
                             else
                             {
+                            	ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
                                 ptInst->eState = MCB_SUCCESS;
                             }
                         }
