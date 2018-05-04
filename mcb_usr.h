@@ -51,7 +51,7 @@ typedef struct
     /** Indicates if a config request has been requested over cyclic frames */
     bool isCfgOverCyclic;
     /** IRQ Event signal */
-    bool isIrqEvnt;
+    volatile bool isIrqEvnt;
     /** Frame pool for holding tx data */
     Mcb_TFrame tTxfrm;
     /** Frame pool for holding rx data */
