@@ -245,8 +245,11 @@ Mcb_DisableCyclic(Mcb_TInst* ptInst);
  *
  * @param[in] ptInst
  *  Mcb instance
+ *
+ * @retval true if a cyclic transmission is done
+ *         false otherwise
  */
-void
+bool
 Mcb_CyclicProcess(Mcb_TInst* ptInst);
 
 #endif

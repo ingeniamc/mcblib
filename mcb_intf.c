@@ -85,8 +85,12 @@ void Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* ptInFrame, Mcb_TFrame
 Mcb_EStatus Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd,
         uint16_t* pu16Data, uint16_t* pu16CfgSz, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz)
 {
+    Mcb_EStatus eCyclicState = MCB_STANDBY;
+
     if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
     {
+        eCyclicState = MCB_CYCLIC_REQUEST;
+        /** Indicate that a cyclic message is transmitted */
         /** Get cyclic data from last transmission */
         Mcb_FrameGetCyclicData(&ptInst->tRxfrm, ptOutBuf, u16CyclicSz);
 
@@ -135,11 +139,13 @@ Mcb_EStatus Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
                     {
                         *pu16Cmd = MCB_REP_ACK;
                         ptInst->isCfgOverCyclic = false;
+                        eCyclicState = MCB_CYCLIC_SUCCESS;
                     }
                     else if (ptInst->eState == MCB_ERROR)
                     {
                         *pu16Cmd |= MCB_REP_ERROR;
                         ptInst->isCfgOverCyclic = false;
+                        eCyclicState = MCB_CYCLIC_ERROR;
                     }
                     else
                     {
@@ -165,14 +171,14 @@ Mcb_EStatus Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
         Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
     }
 
-    return ptInst->eState;
+    return eCyclicState;
 }
 
 static bool Mcb_IntfWriteProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz)
 {
     bool isNewData = false;
 
-    if (ptInst->eState == MCB_STANDBY)
+    if ((ptInst->eState == MCB_STANDBY) || (ptInst->eState == MCB_SUCCESS) || (ptInst->eState == MCB_ERROR))
     {
         ptInst->u16Sz = *pu16Sz;
         ptInst->isPending = true;
@@ -255,7 +261,7 @@ static bool Mcb_IntfReadProcess(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* p
 {
     bool isNewData = false;
 
-    if (ptInst->eState == MCB_STANDBY)
+    if ((ptInst->eState == MCB_STANDBY) || (ptInst->eState == MCB_SUCCESS) || (ptInst->eState == MCB_ERROR))
     {
         ptInst->isPending = true;
         ptInst->eState = MCB_READ_REQUEST;
