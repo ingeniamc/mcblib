@@ -99,12 +99,15 @@ Mcb_IntfIsReady(uint16_t u16Id);
  *
  * @param[in] u16Id
  *  Id of the McbIntf used to identify multiple instances
- *
+ * @param[in] pu16Buf
+ *  Pointer to buffer to compute CRC
+ * @param[in] u16Sz
+ *  Number of WORDS in the buffer
  * @note If this function is not overriden, it
  *       implements a SW version of CRC
  */
 bool
-Mcb_IntfCheckCrc(uint16_t u16Id);
+Mcb_IntfCheckCrc(uint16_t u16Id, uint16_t* pu16Buf, uint16_t u16Sz);
 
 /**
  * Gets the number of milliseconds since system was started

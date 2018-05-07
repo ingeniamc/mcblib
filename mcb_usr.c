@@ -21,7 +21,7 @@ __attribute__((weak))bool Mcb_IntfIsReady(uint16_t u16Id)
     return false;
 }
 
-__attribute__((weak))bool Mcb_IntfCheckCrc(uint16_t u16Id)
+__attribute__((weak))bool Mcb_IntfCheckCrc(uint16_t u16Id, uint16_t* pu16Buf, uint16_t u16Sz)
 {
     /** Compute crc */
     return false;
