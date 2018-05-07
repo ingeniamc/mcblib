@@ -14,7 +14,7 @@
 #define RX_MAP_BASE (uint16_t)0x650
 #define TX_MAP_BASE (uint16_t)0x660
 
-void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, uint32_t u32Timeout)
+void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool calcCrc, uint32_t u32Timeout)
 {
     ptInst->isCyclic = false;
     ptInst->eMode = eMode;
@@ -34,6 +34,7 @@ void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, uint32_t u32Ti
     }
 
     ptInst->tIntf.u16Id = u16Id;
+    ptInst->tIntf.calcCrc = calcCrc;
     Mcb_IntfInit(&ptInst->tIntf);
 }
 

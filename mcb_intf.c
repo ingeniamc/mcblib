@@ -50,7 +50,7 @@ Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
     /** Check if data is already available (IRQ) & SPI is ready for transmission */
     if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
     {
-        if ((ptInst->eState == MCB_WRITE_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) == false))
+        if ((ptInst->eState == MCB_WRITE_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tRxfrm.u16Sz) == false))
         {
             ptInst->eState = MCB_ERROR;
         }
@@ -62,7 +62,7 @@ Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
         /** Set up a new frame if an error is detected */
         if (ptInst->eState == MCB_ERROR)
         {
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->calcCrc);
             isNewData = true;
         }
 
@@ -83,7 +83,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
     /** Check if data is already available (IRQ) & SPI is ready for transmission */
     if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
     {
-        if ((ptInst->eState == MCB_READ_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) == false))
+        if ((ptInst->eState == MCB_READ_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tRxfrm.u16Sz) == false))
         {
             ptInst->eState = MCB_ERROR;
         }
@@ -95,7 +95,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
         /** Set up a new frame if an error is detected */
         if (ptInst->eState == MCB_ERROR)
         {
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->calcCrc);
             isNewData = true;
         }
 
@@ -130,7 +130,7 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
         eCyclicState = MCB_CYCLIC_REQUEST;
         /** Indicate that a cyclic message is transmitted */
         /** Get cyclic data from last transmission */
-        if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
+        if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tRxfrm.u16Sz) != false)
         {
             Mcb_FrameGetCyclicData(&ptInst->tRxfrm, ptOutBuf, u16CyclicSz);
         }
@@ -192,12 +192,12 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
 
         if (isNewData == false)
         {
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
-            Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, false);
+            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->calcCrc);
+            Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->calcCrc);
         }
         else
         {
-            Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, false);
+            Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->calcCrc);
         }
 
         ptInst->isIrqEvnt = false;
@@ -224,18 +224,18 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
             if (ptInst->u16Sz > MCB_FRM_CONFIG_SZ)
             {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_WRITE, MCB_FRM_SEG,
-                        &pu16Data[*pu16Sz - ptInst->u16Sz], false);
+                        &pu16Data[*pu16Sz - ptInst->u16Sz], ptInst->calcCrc);
                 ptInst->u16Sz -= MCB_FRM_CONFIG_SZ;
             }
             else if (ptInst->u16Sz == 0)
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->calcCrc);
                 ptInst->isPending = false;
             }
             else
             {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_WRITE, MCB_FRM_NOTSEG,
-                        &pu16Data[*pu16Sz - ptInst->u16Sz], false);
+                        &pu16Data[*pu16Sz - ptInst->u16Sz], ptInst->calcCrc);
                 ptInst->u16Sz = 0;
             }
 
@@ -294,11 +294,11 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
             /* Send read request */
             if (ptInst->isPending != false)
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, false);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, ptInst->calcCrc);
             }
             else
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->calcCrc);
             }
 
             ptInst->isIrqEvnt = false;
@@ -363,13 +363,13 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
             if (ptInst->u16Sz > MCB_FRM_CONFIG_SZ)
             {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_WRITE, MCB_FRM_SEG,
-                        &pu16Data[*pu16Sz - ptInst->u16Sz], false);
+                        &pu16Data[*pu16Sz - ptInst->u16Sz], ptInst->calcCrc);
                 ptInst->u16Sz -= MCB_FRM_CONFIG_SZ;
             }
             else
             {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_WRITE, MCB_FRM_NOTSEG,
-                        &pu16Data[*pu16Sz - ptInst->u16Sz], false);
+                        &pu16Data[*pu16Sz - ptInst->u16Sz], ptInst->calcCrc);
                 ptInst->u16Sz = 0;
             }
 
@@ -427,11 +427,11 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
             /* Send read request */
             if (ptInst->isPending != false)
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, false);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, ptInst->calcCrc);
             }
             else
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->calcCrc);
             }
 
             isNewData = true;

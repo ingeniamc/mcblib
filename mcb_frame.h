@@ -79,7 +79,7 @@ typedef struct {
  */
 int32_t
 Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
-bool calcCRC);
+bool calcCrc);
 
 /**
  * Add cyclic data into a pre-created config frame
@@ -97,7 +97,7 @@ bool calcCRC);
  * @return 0 success, error code otherwise
  */
 int32_t
-Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC);
+Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCrc);
 
 /**
  * Returns the address of the header.
