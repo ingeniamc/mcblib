@@ -36,9 +36,6 @@ typedef union
 #define MCB_FRM_HDR_SZ         1U
 /** Ingenia protocol frame CRC size */
 #define MCB_FRM_CRC_SZ         1U
-/** Ingenia protocol frame dynamic buffer size */
-#define MCB_FRM_MAX_CYCLIC_SZ   (MCB_FRM_MAX_DATA_SZ - MCB_FRM_HDR_SZ - \
-                                 MCB_FRM_CONFIG_SZ - MCB_FRM_CRC_SZ)
 
 /**
  * Computes the CRC of the input frame
@@ -51,28 +48,21 @@ typedef union
 uint16_t
 Mcb_FrameCRC(const Mcb_TFrame* ptFrame);
 
-int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
-        const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC)
+int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending,
+        const void* pCfgBuf, bool calcCRC)
 {
     int32_t i32Err = 0;
 
     while (1)
     {
-        THeader tHeader;     
-        
+        THeader tHeader;
+
         if (tFrame == NULL)
         {
             i32Err = -1;
             break;
         }
 
-        /* Check dynamic buffer size */
-        if (u16SzCyclic > 10)
-        {
-            i32Err = -2;
-            break;
-        }
-        
         tHeader.u12Addr = u16Addr;
         tHeader.u3Cmd = u8Cmd;
         tHeader.u1Pending = u8Pending;
@@ -88,15 +78,56 @@ int32_t Mcb_FrameCreate(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uin
             memset(&tFrame->u16Buf[MCB_FRM_CONFIG_IDX], 0, (sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
         }
 
-		memcpy(&tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], pCyclicBuf,
-              (sizeof(tFrame->u16Buf[0]) * u16SzCyclic));
+        tFrame->u16Sz = MCB_FRM_HEAD_SZ + MCB_FRM_CONFIG_SZ;
 
-        tFrame->u16Sz = MCB_FRM_HEAD_SZ + MCB_FRM_CONFIG_SZ + u16SzCyclic;
         if (calcCRC != false)
         {
             /* Compute CRC and add it to buffer */
             tFrame->u16Buf[tFrame->u16Sz] = Mcb_FrameCRC(tFrame);
-			tFrame->u16Sz += MCB_FRM_CRC_SZ;
+            tFrame->u16Sz += MCB_FRM_CRC_SZ;
+        }
+        break;
+    }
+
+    return i32Err;
+}
+
+int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC)
+{
+    int32_t i32Err = 0;
+
+    while (1)
+    {
+        if (tFrame == NULL)
+        {
+            i32Err = -1;
+            break;
+        }
+
+        /* Check dynamic buffer size */
+        if (u16SzCyclic > MCB_FRM_MAX_CYCLIC_SZ)
+        {
+            i32Err = -2;
+            break;
+        }
+
+        /* Copy config & cyclic buffer (if any) */
+        if (pCyclicBuf != NULL)
+        {
+            memcpy(&tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], pCyclicBuf, (sizeof(tFrame->u16Buf[0]) * u16SzCyclic));
+        }
+        else
+        {
+            memset(&tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], 0, (sizeof(tFrame->u16Buf[0]) * u16SzCyclic));
+        }
+
+        tFrame->u16Sz += u16SzCyclic;
+
+        if (calcCRC != false)
+        {
+            /* Compute CRC and add it to buffer */
+            tFrame->u16Buf[tFrame->u16Sz] = Mcb_FrameCRC(tFrame);
+            tFrame->u16Sz += MCB_FRM_CRC_SZ;
         }
         break;
     }
@@ -133,11 +164,18 @@ uint8_t Mcb_FrameGetCmd(const Mcb_TFrame* tFrame)
 
 uint16_t Mcb_FrameGetConfigData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf)
 {
-    memcpy(pu16Buf, &tFrame->u16Buf[MCB_FRM_HEAD_SZ],
-			(sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
+    memcpy(pu16Buf, &tFrame->u16Buf[MCB_FRM_CONFIG_IDX], (sizeof(tFrame->u16Buf[0]) * MCB_FRM_CONFIG_SZ));
 
     return MCB_FRM_CONFIG_SZ;
 }
+
+uint16_t Mcb_FrameGetCyclicData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf, uint16_t u16Size)
+{
+    memcpy(pu16Buf, &tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], (sizeof(tFrame->u16Buf[0]) * u16Size));
+
+    return MCB_FRM_CONFIG_SZ;
+}
+
 
 bool Mcb_FrameCheckCRC(const Mcb_TFrame* tFrame)
 {
