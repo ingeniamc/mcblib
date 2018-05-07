@@ -120,7 +120,7 @@ void Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* ptInFrame, Mcb_TFrame
     Mcb_IntfSPITransfer(ptInst->u16Id, ptInFrame->u16Buf, ptOutFrame->u16Buf, ptInFrame->u16Sz);
 }
 
-Mcb_EStatus Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd,
+Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd,
         uint16_t* pu16Data, uint16_t* pu16CfgSz, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz)
 {
     Mcb_EStatus eCyclicState = MCB_STANDBY;

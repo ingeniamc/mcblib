@@ -32,11 +32,6 @@ typedef union
     uint16_t u16All;
 } THeader;
 
-/** Ingenia protocol frame header size */
-#define MCB_FRM_HDR_SZ         1U
-/** Ingenia protocol frame CRC size */
-#define MCB_FRM_CRC_SZ         1U
-
 /**
  * Computes the CRC of the input frame
  *

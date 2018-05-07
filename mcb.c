@@ -20,6 +20,8 @@ void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, uint32_t u32Ti
     ptInst->eMode = eMode;
     ptInst->u32Timeout = u32Timeout;
 
+    ptInst->CfgOverCyclicEvnt = NULL;
+
     ptInst->tCyclicRxList.u8Mapped = 0;
     ptInst->tCyclicTxList.u8Mapped = 0;
 
@@ -136,14 +138,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 
 void Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg))
 {
-    if (Evnt != NULL)
-    {
-        ptInst->CfgOverCyclicEvnt = Evnt;
-    }
-    else
-    {
-        ptInst->CfgOverCyclicEvnt = NULL;
-    }
+    ptInst->CfgOverCyclicEvnt = Evnt;
 }
 
 void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
@@ -554,7 +549,7 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
 
     if (ptInst->isCyclic != false)
     {
-        Mcb_EStatus eResult = Mcb_IntfCyclicTranfer(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
+        Mcb_EStatus eResult = Mcb_IntfCyclicTransfer(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
                 &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size, ptInst->u16CyclicTx,
                 ptInst->u16CyclicRx, ptInst->u16CyclicSize);
 

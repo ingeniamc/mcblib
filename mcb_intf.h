@@ -12,22 +12,87 @@
 
 #include "mcb_usr.h"
 
-/** Initialize a High speed protocol interface */
+/**
+ * Initialize a High speed protocol interface
+ *
+ * @param[in]  ptInst
+ *  Instace to be initialized
+ */
 void
 Mcb_IntfInit(Mcb_TIntf* ptInst);
 
-/** Deinitialize a high speed protocol interface */
+/**
+ * Deinitialize a high speed protocol interface
+ *
+ * @param[in] ptInst
+ *  Instance to be deinitialized
+ */
 void
 Mcb_IntfDeinit(Mcb_TIntf* ptInst);
 
-/** Write frame */
+/**
+ * Execute a complete config write sequence through MCB
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Node
+ *  Target slave
+ * @param[in] u16Addr
+ *  Register address to be written
+ * @param[in] pu16Data
+ *  Data to be written
+ * @param[in] pu16Sz
+ *  Size to be written
+ *
+ * @retval Mcb_EStatus
+ */
 Mcb_EStatus
 Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
-/** Read frame */
+
+/**
+ * Execute a complete config read sequence through MCB
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Node
+ *  Target slave
+ * @param[in] u16Addr
+ *  Register address to be read
+ * @param[out] pu16Data
+ *  Data to be read
+ * @param[out] pu16Sz
+ *  Size of read words
+ *
+ * @retval Mcb_EStatus
+ */
 Mcb_EStatus
 Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+/**
+ * Execute a cyclic transfer through MCB
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Node
+ *  Target slave
+ * @param[in] u16Addr
+ *  Register address to be read / write through config
+ * @param[in, out] pu16Cmd
+ *  Command to be sent
+ * @param[in, out] pu16Data
+ *  Data to be read / write through config
+ * @param[in, out] pu16CfgSz
+ *  Size of the configuration transmission
+ * @param[in] ptInBuf
+ *  Cyclic data to be sent
+ * @param[out] ptOutBuf
+ *  Received Cyclic data
+ * @param[in] u16CyclicSz
+ *  Cyclic transmission size
+ *
+ * @retval Mcb_EStatus
+ */
 Mcb_EStatus
-Mcb_IntfCyclicTranfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
+Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
         uint16_t* pu16CfgSz, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz);
 #endif /* MCB_INTF_H */
