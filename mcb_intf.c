@@ -260,6 +260,10 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                             ptInst->eState = MCB_SUCCESS;
                         }
                     }
+                    else
+                    {
+                        ptInst->eState = MCB_ERROR;
+                    }
                     break;
                 case MCB_REQ_IDLE:
                     ptInst->eState = MCB_WRITE_REQUEST;
