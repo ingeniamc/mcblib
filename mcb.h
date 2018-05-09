@@ -48,6 +48,8 @@ typedef struct
 {
     /** Number of available register on the list */
     uint8_t u8Mapped;
+    /** Word size of mapped registers */
+    uint16_t u16MappedSize;
     /** Array containing key of mapped registers */
     uint16_t u16Addr[MAX_MAPPED_REG ];
     /** Array containing size of mapped registers */

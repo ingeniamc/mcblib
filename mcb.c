@@ -24,6 +24,8 @@ void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool calcCrc, 
 
     ptInst->tCyclicRxList.u8Mapped = 0;
     ptInst->tCyclicTxList.u8Mapped = 0;
+    ptInst->tCyclicRxList.u16MappedSize = 0;
+    ptInst->tCyclicTxList.u16MappedSize = 0;
 
     for (uint8_t u8Idx = 0; u8Idx < MAX_MAPPED_REG; u8Idx++)
     {
@@ -46,6 +48,8 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
 
     ptInst->tCyclicRxList.u8Mapped = 0;
     ptInst->tCyclicTxList.u8Mapped = 0;
+    ptInst->tCyclicRxList.u16MappedSize = 0;
+    ptInst->tCyclicTxList.u16MappedSize = 0;
 
     for (uint8_t u8Idx = 0; u8Idx < MAX_MAPPED_REG; u8Idx++)
     {
@@ -175,10 +179,11 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
         switch (tMcbMsg.eStatus)
         {
             case MCB_SUCCESS:
-                pRet = &ptInst->u16CyclicRx[ptInst->tCyclicTxList.u8Mapped];
+                pRet = &ptInst->u16CyclicRx[ptInst->tCyclicTxList.u16MappedSize];
                 ptInst->tCyclicTxList.u16Addr[ptInst->tCyclicTxList.u8Mapped] = u16Addr;
                 ptInst->tCyclicTxList.u16Sz[ptInst->tCyclicTxList.u8Mapped] = u16Sz;
                 ptInst->tCyclicTxList.u8Mapped++;
+                ptInst->tCyclicTxList.u16MappedSize += (u16Sz >> 1);
                 break;
             default:
                 /** Nothing */
@@ -222,10 +227,11 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
         switch (tMcbMsg.eStatus)
         {
             case MCB_SUCCESS:
-                pRet = &ptInst->u16CyclicTx[ptInst->tCyclicRxList.u8Mapped];
+                pRet = &ptInst->u16CyclicTx[ptInst->tCyclicRxList.u16MappedSize];
                 ptInst->tCyclicRxList.u16Addr[ptInst->tCyclicRxList.u8Mapped] = u16Addr;
                 ptInst->tCyclicRxList.u16Sz[ptInst->tCyclicRxList.u8Mapped] = u16Sz;
                 ptInst->tCyclicRxList.u8Mapped++;
+                ptInst->tCyclicRxList.u16MappedSize += (u16Sz >> 1);
                 break;
             default:
                 /** Nothing */
@@ -266,6 +272,7 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
     switch (tMcbMsg.eStatus)
     {
         case MCB_SUCCESS:
+            ptInst->tCyclicTxList.u16MappedSize -= (ptInst->tCyclicTxList.u16Sz[ptInst->tCyclicTxList.u8Mapped] >> 1);
             ptInst->tCyclicTxList.u16Addr[ptInst->tCyclicTxList.u8Mapped] = 0;
             ptInst->tCyclicTxList.u16Sz[ptInst->tCyclicTxList.u8Mapped] = 0;
             ptInst->tCyclicTxList.u8Mapped--;
@@ -308,6 +315,7 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
     switch (tMcbMsg.eStatus)
     {
         case MCB_SUCCESS:
+            ptInst->tCyclicRxList.u16MappedSize -= (ptInst->tCyclicRxList.u16Sz[ptInst->tCyclicRxList.u8Mapped] >> 1);
             ptInst->tCyclicRxList.u16Addr[ptInst->tCyclicRxList.u8Mapped] = 0;
             ptInst->tCyclicRxList.u16Sz[ptInst->tCyclicRxList.u8Mapped] = 0;
             ptInst->tCyclicRxList.u8Mapped--;
@@ -350,6 +358,7 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
     {
         case MCB_SUCCESS:
             ptInst->tCyclicRxList.u8Mapped = 0;
+            ptInst->tCyclicRxList.u16MappedSize = 0;
             break;
         default:
             /** Nothing */
@@ -382,6 +391,7 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
     {
         case MCB_SUCCESS:
             ptInst->tCyclicTxList.u8Mapped = 0;
+            ptInst->tCyclicTxList.u16MappedSize = 0;
             break;
         default:
             /** Nothing */

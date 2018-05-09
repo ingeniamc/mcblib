@@ -393,6 +393,10 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
                             ptInst->eState = MCB_SUCCESS;
                         }
                     }
+                    else
+                    {
+                        ptInst->eState = MCB_ERROR;
+                    }
                     break;
                 case MCB_REQ_IDLE:
                     /** Waiting for reply */
