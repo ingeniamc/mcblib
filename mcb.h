@@ -51,9 +51,9 @@ typedef struct
     /** Word size of mapped registers */
     uint16_t u16MappedSize;
     /** Array containing key of mapped registers */
-    uint16_t u16Addr[MAX_MAPPED_REG ];
+    uint16_t u16Addr[MAX_MAPPED_REG];
     /** Array containing size of mapped registers */
-    uint16_t u16Sz[MAX_MAPPED_REG ];
+    uint16_t u16Sz[MAX_MAPPED_REG];
 } Mcb_TMappingList;
 
 /** Motion control bus instance */
@@ -71,15 +71,15 @@ struct Mcb_TInst
     Mcb_EMode eMode;
     /** Config transmission Msg */
     Mcb_TMsg tConfig;
-    /** Cyclic transmission (from master point of view) buffer */
+    /** Cyclic transmission (from MCB master point of view) buffer */
     uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
-    /** Cyclic reception (from master point of view) buffer */
+    /** Cyclic reception (from MCB master point of view) buffer */
     uint16_t u16CyclicRx[MCB_FRM_MAX_CYCLIC_SZ];
     /** Cyclic transmission size */
     uint16_t u16CyclicSize;
-    /** RX mapping (from slave point of view) list */
+    /** RX mapping (from MCB slave point of view) list */
     Mcb_TMappingList tCyclicRxList;
-    /** TX mapping (from slave point of view) list */
+    /** TX mapping (from MCB slave point of view) list */
     Mcb_TMappingList tCyclicTxList;
     /** Callback to config over cyclic frame reception */
     void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);

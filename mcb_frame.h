@@ -16,7 +16,7 @@
 #define MCB_FRM_MAX_DATA_SZ     16U
 
 /** Motion control frame config buffer header size (words) */
-#define MCB_FRM_HEAD_SZ			1U
+#define MCB_FRM_HEAD_SZ         1U
 /** Motion control frame config buffer size (words)*/
 #define MCB_FRM_CONFIG_SZ       4U
 /** Motion control frame CRC size (words)*/
