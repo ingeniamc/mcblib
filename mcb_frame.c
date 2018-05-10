@@ -33,7 +33,7 @@ typedef union
 } THeader;
 
 int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending,
-        const void* pCfgBuf, bool calcCrc)
+        const void* pCfgBuf, bool bCalcCrc)
 {
     int32_t i32Err = 0;
 
@@ -64,7 +64,7 @@ int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cm
 
         tFrame->u16Sz = MCB_FRM_HEAD_SZ + MCB_FRM_CONFIG_SZ;
 
-        if (calcCrc != false)
+        if (bCalcCrc != false)
         {
             /* Compute CRC and add it to buffer */
             tFrame->u16Buf[tFrame->u16Sz] = Mcb_IntfComputeCrc(tFrame->u16Buf, tFrame->u16Sz);
@@ -76,7 +76,7 @@ int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cm
     return i32Err;
 }
 
-int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCrc)
+int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool bCalcCrc)
 {
     int32_t i32Err = 0;
 
@@ -107,7 +107,7 @@ int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16
 
         tFrame->u16Sz += u16SzCyclic;
 
-        if (calcCrc != false)
+        if (bCalcCrc != false)
         {
             /* Compute CRC and add it to buffer */
             tFrame->u16Buf[tFrame->u16Sz] = Mcb_IntfComputeCrc(tFrame->u16Buf, tFrame->u16Sz);

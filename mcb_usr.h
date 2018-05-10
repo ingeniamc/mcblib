@@ -52,9 +52,12 @@ typedef struct
 {
     /** Identification used for multiple instances */
     uint16_t u16Id;
-    /** Indicates if the interface needs to calculate the CRC.
-    If true, @ref Mcb_IntfComputeCrc is called */
-    bool calcCrc;
+    /** Indicates if the interface needs to call a function to calculate the CRC.
+    If true, @ref Mcb_IntfComputeCrc is called. This function has a built-in CRC,
+    or it can be replaced with user-specific implementation.
+    If false, no CRC function is called. Used when the CRC is automatically
+    computed by hardware. */
+    bool bCalcCrc;
     /** Indicates the state of the communication bus */
     Mcb_EStatus eState;
     /** Indicates if a config request has been requested over cyclic frames */

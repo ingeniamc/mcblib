@@ -94,13 +94,15 @@ struct Mcb_TInst
  *  Indicates if blocking or non-blocking mode is applied
  * @param[in] u16Id
  *  Assigns an Id to the instance
- * @param[in] calcCrc
- *  Indicates if it is needed to calculate the CRC
- *  If true, @ref Mcb_IntfComputeCrc is called
+ * @param[in] bCalcCrc
+ *  If true, @ref Mcb_IntfComputeCrc is called. This function has a built-in CRC,
+ *  or it can be replaced with user-specific implementation.
+ *  If false, no CRC function is called. Used when the CRC is automatically
+ *  computed by hardware.
  * @param[in] u32Timeout
  *  Indicates the applied timeout for blocking tranmissions in milliseconds
  */
-void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool calcCrc, uint32_t u32Timeout);
+void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout);
 
 /**
  * Deinitializes a mcb instance

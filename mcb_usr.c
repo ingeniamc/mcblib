@@ -12,7 +12,7 @@
 
 __attribute__((weak))uint32_t Mcb_GetMillis(void)
 {
-    /** Return millisecons */
+    /** Return milliseconds */
     return 0;
 }
 
@@ -36,14 +36,15 @@ __attribute__((weak))uint16_t Mcb_IntfComputeCrc(const uint16_t* pu16Buf, uint16
 
 __attribute__((weak))bool Mcb_IntfCheckCrc(uint16_t u16Id, const uint16_t* pu16Buf, uint16_t u16Sz)
 {
-    /** Check the CRC of the incoming data */
-
     bool isCrcOk = true;
+    /** Compute the CRC of the incoming frame, excluding its own CRC */
+    uint16_t u16CompCrc = Mcb_IntfComputeCrc(pu16Buf, (u16Sz - 1));
 
-    if (Mcb_IntfComputeCrc(pu16Buf, u16Sz) != 0)
+    if (u16CompCrc != pu16Buf[u16Sz - 1])
     {
         isCrcOk = false;
     }
+
     return isCrcOk;
 }
 
