@@ -38,6 +38,12 @@ typedef enum
     MCB_READ_REQUEST,
     /** Processing answer from read request */
     MCB_READ_ANSWER,
+    /** Cyclic transmission done */
+    MCB_CYCLIC_REQUEST,
+    /** Cyclic transmission with a successful config */
+    MCB_CYCLIC_SUCCESS,
+    /** Cyclic transmission with a failure config */
+    MCB_CYCLIC_ERROR,
     /** Transaction error */
     MCB_ERROR
 } Mcb_EStatus;
@@ -51,7 +57,7 @@ typedef struct
     /** Indicates if a config request has been requested over cyclic frames */
     bool isCfgOverCyclic;
     /** IRQ Event signal */
-    bool isIrqEvnt;
+    volatile bool isIrqEvnt;
     /** Frame pool for holding tx data */
     Mcb_TFrame tTxfrm;
     /** Frame pool for holding rx data */
@@ -93,12 +99,15 @@ Mcb_IntfIsReady(uint16_t u16Id);
  *
  * @param[in] u16Id
  *  Id of the McbIntf used to identify multiple instances
- *
+ * @param[in] pu16Buf
+ *  Pointer to buffer to compute CRC
+ * @param[in] u16Sz
+ *  Number of WORDS in the buffer
  * @note If this function is not overriden, it
  *       implements a SW version of CRC
  */
 bool
-Mcb_IntfCheckCrc(uint16_t u16Id);
+Mcb_IntfCheckCrc(uint16_t u16Id, uint16_t* pu16Buf, uint16_t u16Sz);
 
 /**
  * Gets the number of milliseconds since system was started
@@ -129,5 +138,18 @@ Mcb_GetMillis(void);
  */
 void
 Mcb_IntfSPITransfer(uint16_t u16Id, uint16_t* pu16In, uint16_t* pu16Out, uint16_t u16Sz);
+
+/**
+ * Generate a pulse on the Sync0 signal for synchronization purpose
+ *
+ * @note Slave is triggering the rising edge of the Sync0 signal, so there
+ *       is not a limitation on the maximum pulse width.
+ *       The minimum pulse width is 20 ns
+ * @param[in] u16Id
+ *  Id of the McbIntf used to identify multiple instances
+ *
+ */
+void
+Mcb_IntfSyncSignal(uint16_t u16Id);
 
 #endif /* MCB_USR_H */
