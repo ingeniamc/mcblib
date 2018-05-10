@@ -95,6 +95,7 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     {
         /* Cyclic mode */
         memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
+        pMcbMsg->eStatus = MCB_STANDBY;
     }
 
     return pMcbMsg->eStatus;
@@ -135,6 +136,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     {
         /* Cyclic mode */
         memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
+        pMcbMsg->eStatus = MCB_STANDBY;
     }
 
     return pMcbMsg->eStatus;
