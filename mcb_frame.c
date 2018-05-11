@@ -7,8 +7,8 @@
  */
 
 #include "mcb_frame.h"
+#include "mcb_usr.h"
 #include <string.h>
-#include "mcb_checksum.h"
 
 /** Frame description
  * Word 0       - Header
@@ -32,19 +32,8 @@ typedef union
     uint16_t u16All;
 } THeader;
 
-/**
- * Computes the CRC of the input frame
- *
- * @param[in] ptFrame
- *  Pointer to target frame
- *
- * @retval result of the CRC 
- */ 
-uint16_t
-Mcb_FrameCRC(const Mcb_TFrame* ptFrame);
-
 int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending,
-        const void* pCfgBuf, bool calcCRC)
+        const void* pCfgBuf, bool bCalcCrc)
 {
     int32_t i32Err = 0;
 
@@ -75,10 +64,10 @@ int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cm
 
         tFrame->u16Sz = MCB_FRM_HEAD_SZ + MCB_FRM_CONFIG_SZ;
 
-        if (calcCRC != false)
+        if (bCalcCrc != false)
         {
             /* Compute CRC and add it to buffer */
-            tFrame->u16Buf[tFrame->u16Sz] = Mcb_FrameCRC(tFrame);
+            tFrame->u16Buf[tFrame->u16Sz] = Mcb_IntfComputeCrc(tFrame->u16Buf, tFrame->u16Sz);
             tFrame->u16Sz += MCB_FRM_CRC_SZ;
         }
         break;
@@ -87,7 +76,7 @@ int32_t Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cm
     return i32Err;
 }
 
-int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC)
+int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool bCalcCrc)
 {
     int32_t i32Err = 0;
 
@@ -118,10 +107,10 @@ int32_t Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16
 
         tFrame->u16Sz += u16SzCyclic;
 
-        if (calcCRC != false)
+        if (bCalcCrc != false)
         {
             /* Compute CRC and add it to buffer */
-            tFrame->u16Buf[tFrame->u16Sz] = Mcb_FrameCRC(tFrame);
+            tFrame->u16Buf[tFrame->u16Sz] = Mcb_IntfComputeCrc(tFrame->u16Buf, tFrame->u16Sz);
             tFrame->u16Sz += MCB_FRM_CRC_SZ;
         }
         break;
@@ -169,29 +158,4 @@ uint16_t Mcb_FrameGetCyclicData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf, uin
     memcpy(pu16Buf, &tFrame->u16Buf[MCB_FRM_CYCLIC_IDX], (sizeof(tFrame->u16Buf[0]) * u16Size));
 
     return MCB_FRM_CONFIG_SZ;
-}
-
-
-bool Mcb_FrameCheckCRC(const Mcb_TFrame* tFrame)
-{
-    bool bCRC = true;
-
-    if (Mcb_FrameCRC(tFrame) != 0)
-    {
-        bCRC = false;
-    }
-
-    return bCRC;
-}
-
-uint16_t Mcb_FrameCRC(const Mcb_TFrame* tFrame)
-{
-    uint16_t u16Crc = CRC_START_XMODEM;
-
-    for (uint16_t u16Idx = 0; u16Idx < tFrame->u16Sz; u16Idx++)
-    {
-        u16Crc = update_crc_ccitt(u16Crc, (tFrame->u16Buf[u16Idx] >> 8) & 0xFF);
-        u16Crc = update_crc_ccitt(u16Crc, (tFrame->u16Buf[u16Idx] & 0xFF));
-    }
-    return u16Crc;
 }

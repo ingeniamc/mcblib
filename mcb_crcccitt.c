@@ -33,9 +33,9 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include "checksum.h"
+#include "mcb_checksum.h"
 
-static uint16_t		    crc_ccitt_generic( const unsigned char *input_str, size_t num_bytes, uint16_t start_value );
+static uint16_t         crc_ccitt_generic( const unsigned char *input_str, size_t num_bytes, uint16_t start_value );
 static void             init_crcccitt_tab( void );
 
 static bool             crc_tabccitt_init       = false;

@@ -52,6 +52,12 @@ typedef struct
 {
     /** Identification used for multiple instances */
     uint16_t u16Id;
+    /** Indicates if the interface needs to call a function to calculate the CRC.
+    If true, @ref Mcb_IntfComputeCrc is called. This function has a built-in CRC,
+    or it can be replaced with user-specific implementation.
+    If false, no CRC function is called. Used when the CRC is automatically
+    computed by hardware. */
+    bool bCalcCrc;
     /** Indicates the state of the communication bus */
     Mcb_EStatus eState;
     /** Indicates if a config request has been requested over cyclic frames */
@@ -97,17 +103,31 @@ Mcb_IntfIsReady(uint16_t u16Id);
  * Computes the CRC of the incoming data.
  * This protocol uses CRC-CCITT (XModem).
  *
+ * @param[in] pu16Buf
+ *  Pointer to target buffer to compute CRC
+ * @param[in] u16Sz
+ *  Size of the buffer in words
+ * @note If this function is not overriden, it
+ *       implements a SW version of CRC
+ * @retval Result of the CRC
+ */
+uint16_t
+Mcb_IntfComputeCrc(const uint16_t* pu16Buf, uint16_t u16Sz);
+
+/**
+ * Checks the CRC of the incoming data.
+ * This protocol uses CRC-CCITT (XModem).
+ *
  * @param[in] u16Id
  *  Id of the McbIntf used to identify multiple instances
  * @param[in] pu16Buf
- *  Pointer to buffer to compute CRC
+ *  Pointer to target buffer to compute CRC
  * @param[in] u16Sz
- *  Number of WORDS in the buffer
- * @note If this function is not overriden, it
- *       implements a SW version of CRC
+ *  Size of the buffer in words
+ * @retval TRUE if the CRC is valid, FALSE otherwise
  */
 bool
-Mcb_IntfCheckCrc(uint16_t u16Id, uint16_t* pu16Buf, uint16_t u16Sz);
+Mcb_IntfCheckCrc(uint16_t u16Id, const uint16_t* pu16Buf, uint16_t u16Sz);
 
 /**
  * Gets the number of milliseconds since system was started

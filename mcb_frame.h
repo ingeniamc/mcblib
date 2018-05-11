@@ -73,13 +73,17 @@ typedef struct {
  *      Indicates if the config data will be segmented.
  * @param [in] pCfgBuf
  *      Buffer with config data.
- * @param [in] calcCRC
- * 		Indicates if CRC field will be calculated.
+ * @param [in] bCalcCrc
+ *  If true, @ref Mcb_IntfComputeCrc is called. This function has a built-in CRC,
+ *  or it can be replaced with user-specific implementation.
+ *  If false, no CRC function is called. Used when the CRC is automatically
+ *  computed by hardware.
+ *
  * @return 0 success, error code otherwise
  */
 int32_t
-Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd, uint8_t u8Pending, const void* pCfgBuf,
-bool calcCRC);
+Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
+                      uint8_t u8Pending, const void* pCfgBuf, bool bCalcCrc);
 
 /**
  * Add cyclic data into a pre-created config frame
@@ -92,12 +96,17 @@ bool calcCRC);
  *      Buffer with cyclic data.
  * @param [in] u16SzCyclic
  *      Size of the cyclic data.
- * @param [in] calcCRC
- *      Indicates if CRC field will be calculated.
+ * @param [in] bCalcCrc
+ *  If true, @ref Mcb_IntfComputeCrc is called. This function has a built-in CRC,
+ *  or it can be replaced with user-specific implementation.
+ *  If false, no CRC function is called. Used when the CRC is automatically
+ *  computed by hardware.
+ *
  * @return 0 success, error code otherwise
  */
 int32_t
-Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf, uint16_t u16SzCyclic, bool calcCRC);
+Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf,
+                      uint16_t u16SzCyclic, bool bCalcCrc);
 
 /**
  * Returns the address of the header.
