@@ -52,7 +52,7 @@ typedef struct
     uint16_t u16MappedSize;
     /** Array containing key of mapped registers */
     uint16_t u16Addr[MAX_MAPPED_REG];
-    /** Array containing size of mapped registers */
+    /** Array containing size of mapped registers, in bytes */
     uint16_t u16Sz[MAX_MAPPED_REG];
 } Mcb_TMappingList;
 
