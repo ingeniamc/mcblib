@@ -189,7 +189,7 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
                 ptInst->tCyclicTxList.u16Sz[ptInst->tCyclicTxList.u8Mapped] = u16Sz;
                 ptInst->tCyclicTxList.u8Mapped++;
                 /** Ensure correct conversion from bytes to words */
-                ptInst->tCyclicTxList.u16MappedSize += ((u16Sz + (u16Sz % 2)) >> 1);
+                ptInst->tCyclicTxList.u16MappedSize += ((u16Sz + (u16Sz & 1)) >> 1);
                 break;
             default:
                 /** Nothing */
@@ -238,7 +238,7 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
                 ptInst->tCyclicRxList.u16Sz[ptInst->tCyclicRxList.u8Mapped] = u16Sz;
                 ptInst->tCyclicRxList.u8Mapped++;
                 /** Ensure correct conversion from bytes to words */
-                ptInst->tCyclicRxList.u16MappedSize += ((u16Sz + (u16Sz % 2)) >> 1);
+                ptInst->tCyclicRxList.u16MappedSize += ((u16Sz + (u16Sz & 1)) >> 1);
                 break;
             default:
                 /** Nothing */
@@ -282,7 +282,7 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
         case MCB_SUCCESS:
             /* Ensure correct conversion from bytes to words */
             u16SizeBytes = ptInst->tCyclicTxList.u16Sz[ptInst->tCyclicTxList.u8Mapped];
-            ptInst->tCyclicTxList.u16MappedSize -= ((u16SizeBytes + (u16SizeBytes % 2)) >> 1);
+            ptInst->tCyclicTxList.u16MappedSize -= ((u16SizeBytes + (u16SizeBytes & 1)) >> 1);
             ptInst->tCyclicTxList.u16Addr[ptInst->tCyclicTxList.u8Mapped] = 0;
             ptInst->tCyclicTxList.u16Sz[ptInst->tCyclicTxList.u8Mapped] = 0;
             ptInst->tCyclicTxList.u8Mapped--;
@@ -328,7 +328,7 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
         case MCB_SUCCESS:
             /* Ensure correct conversion from bytes to words */
             u16SizeBytes = ptInst->tCyclicRxList.u16Sz[ptInst->tCyclicRxList.u8Mapped];
-            ptInst->tCyclicRxList.u16MappedSize -= ((u16SizeBytes + (u16SizeBytes % 2)) >> 1);
+            ptInst->tCyclicRxList.u16MappedSize -= ((u16SizeBytes + (u16SizeBytes & 1)) >> 1);
             ptInst->tCyclicRxList.u16Addr[ptInst->tCyclicRxList.u8Mapped] = 0;
             ptInst->tCyclicRxList.u16Sz[ptInst->tCyclicRxList.u8Mapped] = 0;
             ptInst->tCyclicRxList.u8Mapped--;
@@ -415,9 +415,6 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
 int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
-    /** Cyclic sizes in bytes */
-    uint16_t u16RxSz = 0;
-    uint16_t u16TxSz = 0;
     int32_t i32Result = 0;
 
     if (ptInst->isCyclic == false)
@@ -447,53 +444,51 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         switch (tMcbMsg.eStatus)
         {
             case MCB_SUCCESS:
-                for (uint16_t u16Idx = 0; u16Idx < ptInst->tCyclicRxList.u8Mapped; u16Idx++)
-                {
-                    u16RxSz += ptInst->tCyclicRxList.u16Sz[u16Idx];
-                }
+                /** Do nothing */
                 break;
             default:
                 i32Result = -1;
                 break;
         }
-        /** Check and setup TX mapping */
-        tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
-        tMcbMsg.u16Addr = TX_MAP_BASE;
-        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
-        tMcbMsg.u16Size = WORDSIZE_16BIT;
-        tMcbMsg.u16Data[0] = ptInst->tCyclicTxList.u8Mapped;
 
-        u32Millis = Mcb_GetMillis();
-
-        do
+        if (i32Result == 0)
         {
-            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+            /** If RX mapping was OK, check and setup TX mapping */
+            tMcbMsg.eStatus = MCB_STANDBY;
+            tMcbMsg.u16Node = 2;
+            tMcbMsg.u16Addr = TX_MAP_BASE;
+            tMcbMsg.u16Cmd = MCB_REQ_WRITE;
+            tMcbMsg.u16Size = WORDSIZE_16BIT;
+            tMcbMsg.u16Data[0] = ptInst->tCyclicTxList.u8Mapped;
 
-            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+            u32Millis = Mcb_GetMillis();
+
+            do
             {
-                tMcbMsg.eStatus = MCB_ERROR;
-                break;
-            }
+                tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
 
-        } while ((tMcbMsg.eStatus != MCB_ERROR) && (tMcbMsg.eStatus != MCB_SUCCESS));
-
-        switch (tMcbMsg.eStatus)
-        {
-            case MCB_SUCCESS:
-                for (uint16_t u16Idx = 0; u16Idx < ptInst->tCyclicTxList.u8Mapped; u16Idx++)
+                if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
-                    u16TxSz += ptInst->tCyclicTxList.u16Sz[u16Idx];
+                    tMcbMsg.eStatus = MCB_ERROR;
+                    break;
                 }
-                break;
-            default:
-                i32Result = -2;
-                break;
+
+            } while ((tMcbMsg.eStatus != MCB_ERROR) && (tMcbMsg.eStatus != MCB_SUCCESS));
+
+            switch (tMcbMsg.eStatus)
+            {
+                case MCB_SUCCESS:
+                    /** Do nothing */
+                    break;
+                default:
+                    i32Result = -2;
+                    break;
+            }
         }
 
-        /** Enable cyclic mode */
-        if ((u16RxSz > 0) || (u16TxSz > 0))
+        if (i32Result == 0)
         {
+            /** If both mappings are OK, enable cyclic mode */
             tMcbMsg.eStatus = MCB_STANDBY;
             tMcbMsg.u16Node = 2;
             tMcbMsg.u16Addr = CYCLIC_MODE;
@@ -518,7 +513,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             switch (tMcbMsg.eStatus)
             {
                 case MCB_SUCCESS:
-                    /* Nothing*/
+                    /** Do nothing*/
                     break;
                 default:
                     i32Result = -3;
@@ -526,17 +521,17 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             }
         }
 
-        /** Check bigger mapping and set up generated frame size */
+        /** If cyclic mode is correctly enabled */
         if (i32Result == 0)
         {
-            /** Convert bytes into words */
-            if (u16RxSz > u16TxSz)
+            /** Check bigger mapping and set up generated frame size */
+            if (ptInst->tCyclicRxList.u16MappedSize > ptInst->tCyclicTxList.u16MappedSize)
             {
-                ptInst->u16CyclicSize = (u16RxSz + (u16RxSz % 2)) >> 1;
+                ptInst->u16CyclicSize = ptInst->tCyclicRxList.u16MappedSize;
             }
             else
             {
-                ptInst->u16CyclicSize = (u16TxSz + (u16TxSz % 2)) >> 1;
+                ptInst->u16CyclicSize = ptInst->tCyclicTxList.u16MappedSize;
             }
 
             ptInst->isCyclic = true;
