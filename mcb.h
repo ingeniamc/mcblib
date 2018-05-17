@@ -52,7 +52,7 @@ typedef struct
     uint16_t u16MappedSize;
     /** Array containing key of mapped registers */
     uint16_t u16Addr[MAX_MAPPED_REG];
-    /** Array containing size of mapped registers */
+    /** Array containing size of mapped registers, in bytes */
     uint16_t u16Sz[MAX_MAPPED_REG];
 } Mcb_TMappingList;
 
@@ -229,7 +229,9 @@ Mcb_UnmapAll(Mcb_TInst* ptInst);
  * @param[in] ptInst
  *  Mcb instance
  *
- *  @retval 0 if ok, errorcode otherwise
+ *  @retval 0 if we are already in cyclic mode.
+ *          > 0 if transition successful, indicating the cyclic size.
+ *          < 0 indicates an errorcode.
  */
 int32_t
 Mcb_EnableCyclic(Mcb_TInst* ptInst);

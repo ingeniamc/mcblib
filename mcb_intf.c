@@ -162,10 +162,10 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
             switch (*pu16Cmd)
             {
                 case MCB_REQ_READ:
-                    isNewData = Mcb_IntfReadCfg(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    isNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                     break;
                 case MCB_REQ_WRITE:
-                    isNewData = Mcb_IntfWriteCfg(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    isNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                     break;
                 default:
                     /** Nothing */
@@ -192,7 +192,8 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
 
         if (isNewData == false)
         {
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
+            /** The CRC can only be appended by the AppendCyclic() */
+            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
             Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->bCalcCrc);
         }
         else
@@ -367,13 +368,13 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
             if (ptInst->u16Sz > MCB_FRM_CONFIG_SZ)
             {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_WRITE, MCB_FRM_SEG,
-                        &pu16Data[*pu16Sz - ptInst->u16Sz], ptInst->bCalcCrc);
+                        &pu16Data[*pu16Sz - ptInst->u16Sz], false);
                 ptInst->u16Sz -= MCB_FRM_CONFIG_SZ;
             }
             else
             {
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_WRITE, MCB_FRM_NOTSEG,
-                        &pu16Data[*pu16Sz - ptInst->u16Sz], ptInst->bCalcCrc);
+                        &pu16Data[*pu16Sz - ptInst->u16Sz], false);
                 ptInst->u16Sz = 0;
             }
 
@@ -435,11 +436,11 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
             /* Send read request */
             if (ptInst->isPending != false)
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, ptInst->bCalcCrc);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, false);
             }
             else
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
             }
 
             isNewData = true;
