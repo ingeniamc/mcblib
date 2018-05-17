@@ -265,6 +265,13 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                         ptInst->eState = MCB_ERROR;
                     }
                     break;
+                case MCB_REP_WRITE_ERROR:
+                    if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
+                    {
+                        ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
+                        ptInst->eState = MCB_WRITE_ERROR;
+                    }
+                    break;
                 case MCB_REQ_IDLE:
                     ptInst->eState = MCB_WRITE_REQUEST;
                     break;
@@ -332,6 +339,13 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                     else
                     {
                         ptInst->eState = MCB_ERROR;
+                    }
+                    break;
+                case MCB_REP_READ_ERROR:
+                    if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
+                    {
+                        ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
+                        ptInst->eState = MCB_READ_ERROR;
                     }
                     break;
                 case MCB_REQ_IDLE:

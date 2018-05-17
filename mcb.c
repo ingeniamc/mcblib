@@ -83,13 +83,18 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                     break;
                 }
 
-            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
+            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_WRITE_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
         }
         else
         {
             /** Non blocking mode */
             pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
                     &u16sz);
+        }
+
+        if (pMcbMsg->eStatus == MCB_WRITE_ERROR)
+        {
+            pMcbMsg->u16Cmd = MCB_REP_WRITE_ERROR;
         }
     }
     else
@@ -122,7 +127,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                     break;
                 }
 
-            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
+            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_READ_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
 
             pMcbMsg->u16Size = ptInst->tIntf.u16Sz;
         }
@@ -131,6 +136,11 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
             /** Non blocking mode */
             pMcbMsg->eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
                     &pMcbMsg->u16Size);
+        }
+
+        if (pMcbMsg->eStatus == MCB_READ_ERROR)
+        {
+            pMcbMsg->u16Cmd = MCB_REP_READ_ERROR;
         }
     }
     else

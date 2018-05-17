@@ -45,7 +45,11 @@ typedef enum
     /** Cyclic transmission with a failure config */
     MCB_CYCLIC_ERROR,
     /** Transaction error */
-    MCB_ERROR
+    MCB_ERROR,
+    /** Transaction write error */
+    MCB_WRITE_ERROR,
+    /** Transaction read error */
+    MCB_READ_ERROR
 } Mcb_EStatus;
 
 typedef struct
