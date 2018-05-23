@@ -86,7 +86,7 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                     break;
                 }
 
-            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
+            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_WRITE_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
         }
         else
         {
@@ -98,8 +98,10 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     else
     {
         /* Cyclic mode */
+        pMcbMsg->u16Cmd = MCB_REQ_WRITE;
         memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
         pMcbMsg->eStatus = MCB_STANDBY;
+        ptInst->tIntf.isNewCfgOverCyclic = true;
     }
 
     return pMcbMsg->eStatus;
@@ -125,7 +127,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                     break;
                 }
 
-            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
+            } while ((pMcbMsg->eStatus != MCB_ERROR) && (pMcbMsg->eStatus != MCB_READ_ERROR) && (pMcbMsg->eStatus != MCB_SUCCESS));
 
             pMcbMsg->u16Size = ptInst->tIntf.u16Sz;
         }
@@ -139,8 +141,10 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     else
     {
         /* Cyclic mode */
+        pMcbMsg->u16Cmd = MCB_REQ_READ;
         memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
         pMcbMsg->eStatus = MCB_STANDBY;
+        ptInst->tIntf.isNewCfgOverCyclic = true;
     }
 
     return pMcbMsg->eStatus;
@@ -535,9 +539,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             }
 
             ptInst->isCyclic = true;
+            i32Result = ptInst->u16CyclicSize;
         }
-
-        i32Result = ptInst->u16CyclicSize;
     }
 
     return i32Result;
@@ -570,8 +573,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
     if (ptInst->isCyclic != false)
     {
         Mcb_EStatus eResult = Mcb_IntfCyclicTransfer(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
-                &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size, ptInst->u16CyclicTx,
-                ptInst->u16CyclicRx, ptInst->u16CyclicSize);
+                &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
+                ptInst->u16CyclicTx, ptInst->u16CyclicRx, ptInst->u16CyclicSize);
 
         if (eResult != MCB_STANDBY)
         {
