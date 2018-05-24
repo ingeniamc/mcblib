@@ -65,7 +65,7 @@ struct Mcb_TInst
     bool isCyclic;
     /** Indicates the timeout applied for blocking transmissions */
     uint32_t u32Timeout;
-    /** Linked Hsp module */
+    /** Linked mcb module */
     Mcb_TIntf tIntf;
     /** Transmission mode */
     Mcb_EMode eMode;

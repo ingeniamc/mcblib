@@ -38,11 +38,15 @@ typedef enum
     MCB_READ_REQUEST,
     /** Processing answer from read request */
     MCB_READ_ANSWER,
-    /** Cyclic transmission done */
+    /** Write config request error */
+    MCB_WRITE_ERROR,
+    /** Read config request error */
+    MCB_READ_ERROR,
+    /** Config request over cyclic pending */
     MCB_CYCLIC_REQUEST,
-    /** Cyclic transmission with a successful config */
+    /** Cyclic request over cyclic successfully finished */
     MCB_CYCLIC_SUCCESS,
-    /** Cyclic transmission with a failure config */
+    /** Cyclic request over cyclic finished with error */
     MCB_CYCLIC_ERROR,
     /** Transaction error */
     MCB_ERROR
@@ -60,8 +64,10 @@ typedef struct
     bool bCalcCrc;
     /** Indicates the state of the communication bus */
     Mcb_EStatus eState;
-    /** Indicates if a config request has been requested over cyclic frames */
-    bool isCfgOverCyclic;
+    /** Indicates if there is a new config request over cyclic state */
+    volatile bool isNewCfgOverCyclic;
+    /** Indicates if a config request has been requested over cyclic state */
+    volatile bool isCfgOverCyclic;
     /** IRQ Event signal */
     volatile bool isIrqEvnt;
     /** Frame pool for holding tx data */
