@@ -10,9 +10,10 @@
 #include "mcb.h"
 #include <string.h>
 
-#define CYCLIC_MODE (uint16_t)0x640
-#define RX_MAP_BASE (uint16_t)0x650
-#define TX_MAP_BASE (uint16_t)0x660
+#define ADDR_COMM_STATE     (uint16_t)0x640
+#define ADDR_CYCLIC_MODE    (uint16_t)0x641
+#define RX_MAP_BASE         (uint16_t)0x650
+#define TX_MAP_BASE         (uint16_t)0x660
 
 #define WORDSIZE_16BIT      1
 #define WORDSIZE_32BIT      2
@@ -495,7 +496,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             /** If both mappings are OK, enable cyclic mode */
             tMcbMsg.eStatus = MCB_STANDBY;
             tMcbMsg.u16Node = 2;
-            tMcbMsg.u16Addr = CYCLIC_MODE;
+            tMcbMsg.u16Addr = ADDR_COMM_STATE;
             tMcbMsg.u16Cmd = MCB_REQ_WRITE;
             tMcbMsg.u16Size = WORDSIZE_16BIT;
             tMcbMsg.u16Data[0] = (uint16_t) 2U;
@@ -554,13 +555,44 @@ int32_t Mcb_DisableCyclic(Mcb_TInst* ptInst)
     {
         tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = 2;
-        tMcbMsg.u16Addr = CYCLIC_MODE;
+        tMcbMsg.u16Addr = ADDR_COMM_STATE;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
         tMcbMsg.u16Data[0] = (uint16_t) 1U;
 
         /** Cyclic will be disabled through cyclic messages */
         tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+    }
+
+    return 0;
+}
+
+int32_t Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
+{
+    Mcb_TMsg tMcbMsg;
+
+    if (ptInst->isCyclic == false)
+    {
+        tMcbMsg.eStatus = MCB_STANDBY;
+        tMcbMsg.u16Node = 2;
+        tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
+        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
+        tMcbMsg.u16Size = WORDSIZE_16BIT;
+        tMcbMsg.u16Data[0] = (uint16_t) eNewCycMode;
+
+        uint32_t u32Millis = Mcb_GetMillis();
+
+        do
+        {
+            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+            {
+                tMcbMsg.eStatus = MCB_ERROR;
+                break;
+            }
+
+        } while ((tMcbMsg.eStatus != MCB_ERROR) && (tMcbMsg.eStatus != MCB_SUCCESS));
     }
 
     return 0;
