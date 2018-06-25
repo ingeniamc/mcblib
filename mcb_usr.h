@@ -50,10 +50,6 @@ typedef enum
     MCB_CYCLIC_ERROR,
     /** Transaction error */
     MCB_ERROR,
-    /** Transaction write error */
-    MCB_WRITE_ERROR,
-    /** Transaction read error */
-    MCB_READ_ERROR
 } Mcb_EStatus;
 
 typedef struct

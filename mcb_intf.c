@@ -374,13 +374,6 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                         ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
                         ptInst->eState = MCB_READ_ERROR;
                     }
-                    break;
-                case MCB_REP_READ_ERROR:
-                    if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
-                    {
-                        ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
-                        ptInst->eState = MCB_READ_ERROR;
-                    }
                     else
                     {
                         ptInst->eState = MCB_ERROR;
