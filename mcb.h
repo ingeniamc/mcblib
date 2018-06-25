@@ -52,7 +52,7 @@ typedef struct
     uint16_t u16MappedSize;
     /** Array containing key of mapped registers */
     uint16_t u16Addr[MAX_MAPPED_REG];
-    /** Array containing size of mapped registers */
+    /** Array containing size of mapped registers, in bytes */
     uint16_t u16Sz[MAX_MAPPED_REG];
 } Mcb_TMappingList;
 
@@ -65,7 +65,7 @@ struct Mcb_TInst
     bool isCyclic;
     /** Indicates the timeout applied for blocking transmissions */
     uint32_t u32Timeout;
-    /** Linked Hsp module */
+    /** Linked mcb module */
     Mcb_TIntf tIntf;
     /** Transmission mode */
     Mcb_EMode eMode;
@@ -84,6 +84,14 @@ struct Mcb_TInst
     /** Callback to config over cyclic frame reception */
     void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
+
+typedef enum
+{
+    /** Cyclic mode without sync */
+    MCB_CYC_NON_SYNC = 0,
+    /** Cyclic mode with sync enabled */
+    MCB_CYC_SYNC
+} Mcb_ECyclicMode;
 
 /** 
  * Initialization of a mcb instance 
@@ -229,7 +237,9 @@ Mcb_UnmapAll(Mcb_TInst* ptInst);
  * @param[in] ptInst
  *  Mcb instance
  *
- *  @retval 0 if ok, errorcode otherwise
+ *  @retval 0 if we are already in cyclic mode.
+ *          > 0 if transition successful, indicating the cyclic size.
+ *          < 0 indicates an errorcode.
  */
 int32_t
 Mcb_EnableCyclic(Mcb_TInst* ptInst);
@@ -246,6 +256,18 @@ Mcb_EnableCyclic(Mcb_TInst* ptInst);
  */
 int32_t
 Mcb_DisableCyclic(Mcb_TInst* ptInst);
+
+/**
+ * Sets the desired cyclic mode.
+ *
+ * @note Blocking function, while the config is written into driver.
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ * @param[in] eNewCycMode Desired cyclic mode.
+ */
+int32_t
+Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
 
 /**
  * Function to be called cyclically when cyclic mode is enabled
