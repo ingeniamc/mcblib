@@ -49,7 +49,7 @@ typedef enum
     /** Cyclic request over cyclic finished with error */
     MCB_CYCLIC_ERROR,
     /** Transaction error */
-    MCB_ERROR
+    MCB_ERROR,
 } Mcb_EStatus;
 
 typedef struct
