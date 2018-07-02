@@ -42,6 +42,12 @@ void Mcb_IntfDeinit(Mcb_TIntf* ptInst)
     ptInst->isCfgOverCyclic = false;
 }
 
+void Mcb_IntfReset(Mcb_TIntf* ptInst)
+{
+    ptInst->eState = MCB_STANDBY;
+    ptInst->isIrqEvnt = true;
+}
+
 Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data,
         uint16_t* pu16Sz)
 {
