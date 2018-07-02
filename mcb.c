@@ -84,6 +84,7 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                 if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
                     pMcbMsg->eStatus = MCB_ERROR;
+                    Mcb_IntfInit(&ptInst->tIntf);
                     break;
                 }
 
@@ -130,8 +131,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                 if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
                     pMcbMsg->eStatus = MCB_ERROR;
-                    ptInst->tIntf.eState = MCB_STANDBY;
-                    ptInst->tIntf.isIrqEvnt = true;
+                    Mcb_IntfInit(&ptInst->tIntf);
                     break;
                 }
 
