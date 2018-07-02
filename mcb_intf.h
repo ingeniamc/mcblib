@@ -31,6 +31,15 @@ void
 Mcb_IntfDeinit(Mcb_TIntf* ptInst);
 
 /**
+ * Resets the High speed protocol interface
+ *
+ * @param[in]  ptInst
+ *  Instace to be reinitialized
+ */
+void
+Mcb_IntfReset(Mcb_TIntf* ptInst);
+
+/**
  * Execute a complete config write sequence through MCB
  *
  * @param[in] ptInst
