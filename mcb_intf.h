@@ -13,7 +13,7 @@
 #include "mcb_usr.h"
 
 /**
- * Initialize a High speed protocol interface
+ * Initialize a Motion Control Bus interface
  *
  * @param[in]  ptInst
  *  Instace to be initialized
@@ -22,7 +22,7 @@ void
 Mcb_IntfInit(Mcb_TIntf* ptInst);
 
 /**
- * Deinitialize a high speed protocol interface
+ * Deinitialize Motion Control Bus interface
  *
  * @param[in] ptInst
  *  Instance to be deinitialized
@@ -31,7 +31,7 @@ void
 Mcb_IntfDeinit(Mcb_TIntf* ptInst);
 
 /**
- * Resets the High speed protocol interface
+ * Resets the Motion Control Bus interface
  *
  * @param[in]  ptInst
  *  Instace to be reinitialized
