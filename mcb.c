@@ -97,9 +97,13 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                     &u16sz);
         }
 
-        if (pMcbMsg->eStatus == MCB_WRITE_ERROR)
+        if (pMcbMsg->eStatus != MCB_SUCCESS)
         {
-            pMcbMsg->u16Cmd = MCB_REP_WRITE_ERROR;
+            pMcbMsg->u16Cmd |= MCB_REP_ERROR;
+        }
+        else
+        {
+            pMcbMsg->u16Cmd = MCB_REP_ACK;
         }
     }
     else
