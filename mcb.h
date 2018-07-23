@@ -12,34 +12,38 @@
 
 #include "mcb_intf.h"
 
+/** Maximum data size of the buffers */
 #define MCB_MAX_DATA_SZ 128
 
+/** Default timeout for blocking mode */
 #define MCB_DFLT_TIMEOUT 500
 
+/** Maximum number of mapped registers simultaneously */
 #define MAX_MAPPED_REG (uint8_t)8U
 
+/** Motion control bus mode of operation */
 typedef enum
 {
-    /* Blocking mode, each request block until response */
+    /** Blocking mode, each request block until response */
     MCB_BLOCKING = 0,
-    /* Non Blocking mode, if not ready, return state */
+    /** Non Blocking mode, if not ready, return state */
     MCB_NON_BLOCKING
 } Mcb_EMode;
 
 /** Frame data struct */
 typedef struct
 {
-    /* Node data */
+    /** Node data */
     uint16_t u16Node;
-    /* Address data */
+    /** Address data */
     uint16_t u16Addr;
-    /* Command data */
+    /** Command data */
     uint16_t u16Cmd;
-    /* Message total size (words) */
+    /** Message total size (words) */
     uint16_t u16Size;
-    /* Static data */
+    /** Static data */
     uint16_t u16Data[MCB_MAX_DATA_SZ];
-    /* Message status */
+    /** Message status */
     Mcb_EStatus eStatus;
 } Mcb_TMsg;
 
@@ -59,6 +63,7 @@ typedef struct
 /** Motion control bus instance */
 typedef struct Mcb_TInst Mcb_TInst;
 
+/** Main motion control instance */
 struct Mcb_TInst
 {
     /** Indicates if mcb is in cyclic mode */
@@ -85,6 +90,7 @@ struct Mcb_TInst
     void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
 
+/** Motion control bus frame types*/
 typedef enum
 {
     /** Cyclic mode without sync */
@@ -125,10 +131,10 @@ void Mcb_Deinit(Mcb_TInst* ptInst);
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in/out] mcbMsg
+ * @param[in,out] mcbMsg
  *  Request to be send and load with reply
- * @param[in] u32Timeout
- *  Timeout duration
+ *
+ * @retval Status of the motion control instance
  */
 Mcb_EStatus
 Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
@@ -138,10 +144,10 @@ Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in/out] mcbMsg
+ * @param[in,out] mcbMsg
  *  Request to be send and load with reply
- * @param[in] u32Timeout
- *  Timeout duration
+ *
+ * @retval Status of the motion control instance
  */
 Mcb_EStatus
 Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);

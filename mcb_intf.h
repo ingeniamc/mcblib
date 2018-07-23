@@ -1,5 +1,5 @@
 /**
- * @file mcb_intf.f
+ * @file mcb_intf.h
  * @brief This file contains API for accessing to low level interface
  * 		  of the motion control bus (MCB)
  *

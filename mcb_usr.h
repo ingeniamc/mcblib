@@ -52,6 +52,7 @@ typedef enum
     MCB_ERROR,
 } Mcb_EStatus;
 
+/** Motion control communication interface instance */
 typedef struct
 {
     /** Identification used for multiple instances */
@@ -137,9 +138,6 @@ Mcb_IntfCheckCrc(uint16_t u16Id, const uint16_t* pu16Buf, uint16_t u16Sz);
 
 /**
  * Gets the number of milliseconds since system was started
- *
- * @param[in] u16Id
- *  Id of the McbIntf used to identify multiple instances
  *
  * @retval milliseconds
  */
