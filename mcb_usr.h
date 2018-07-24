@@ -7,6 +7,14 @@
  * @copyright Ingenia Motion Control (c) 2018. All rights reserved.
  */
 
+/**
+ * \addtogroup UserAPI Functions implemented by user
+ * @{
+ *
+ *  This functions must to be implemented by the user to adapt
+ *  its HAL / BSP.
+ */
+ 
 #ifndef MCB_USR_H
 #define MCB_USR_H
 
@@ -177,3 +185,5 @@ void
 Mcb_IntfSyncSignal(uint16_t u16Id);
 
 #endif /* MCB_USR_H */
+
+/** @} */

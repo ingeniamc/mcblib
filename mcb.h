@@ -7,6 +7,15 @@
  * @copyright Ingenia Motion Control (c) 2018. All rights reserved.
  */
 
+ /**
+ * \addtogroup MainAPI Main API
+ *
+ * @{
+ *
+ *  Main API containing all structs, variables and functions required
+ *  to use Motion Control Bus.
+ */
+ 
 #ifndef MCB_H
 #define MCB_H
 
@@ -33,11 +42,11 @@ typedef enum
 /** Frame data struct */
 typedef struct
 {
-    /** Node data */
+    /** Destination / source node */
     uint16_t u16Node;
-    /** Address data */
+    /** Target register address */
     uint16_t u16Addr;
-    /** Command data */
+    /** Master / slave command */
     uint16_t u16Cmd;
     /** Message total size (words) */
     uint16_t u16Size;
@@ -288,3 +297,5 @@ bool
 Mcb_CyclicProcess(Mcb_TInst* ptInst);
 
 #endif
+
+/** @} */

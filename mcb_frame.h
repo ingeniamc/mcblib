@@ -6,6 +6,13 @@
  * @copyright Ingenia Motion Control (c) 2018. All rights reserved.
  */
 
+/**
+ * \addtogroup InternalAPI MCB library
+ * @{
+ *
+ *  Internal headers of the motion control bus library
+ */
+ 
 #ifndef MCB_FRAME_H
 #define MCB_FRAME_H
 
@@ -180,3 +187,5 @@ bool
 Mcb_FrameCheckCRC(const Mcb_TFrame* tFrame);
 
 #endif /* MCB_FRAME_H */
+
+/** @} */
