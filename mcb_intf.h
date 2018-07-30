@@ -1,5 +1,5 @@
 /**
- * @file mcb_intf.f
+ * @file mcb_intf.h
  * @brief This file contains API for accessing to low level interface
  * 		  of the motion control bus (MCB)
  *
@@ -7,6 +7,13 @@
  * @copyright Ingenia Motion Control (c) 2018. All rights reserved.
  */
 
+ /**
+ * \addtogroup InternalAPI MCB library
+ * @{
+ *
+ *  Internal headers of the motion control bus library
+ */
+ 
 #ifndef MCB_INTF_H
 #define MCB_INTF_H
 
@@ -105,3 +112,5 @@ Mcb_EStatus
 Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
                        uint16_t* pu16CfgSz, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz);
 #endif /* MCB_INTF_H */
+
+/** @} */

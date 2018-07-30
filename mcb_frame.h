@@ -6,6 +6,13 @@
  * @copyright Ingenia Motion Control (c) 2018. All rights reserved.
  */
 
+/**
+ * \addtogroup InternalAPI MCB library
+ * @{
+ *
+ *  Internal headers of the motion control bus library
+ */
+ 
 #ifndef MCB_FRAME_H
 #define MCB_FRAME_H
 
@@ -49,7 +56,9 @@
 #define MCB_REP_ERROR           4U
 
 /** Ingenia protocol segmentation definitions */
+/** Bit value for not segmented frames */
 #define MCB_FRM_NOTSEG          0U
+/** Bit value for segmented frames */
 #define MCB_FRM_SEG             1U
 
 /** High speed Ingenia protocol frame */
@@ -67,7 +76,7 @@ typedef struct {
  *      Destination frame
  * @param [in] u16Addr
  *      Register address.
- * @param [in] u16Cmd
+ * @param [in] u8Cmd
  *      Frame command (request or reply)
  * @param [in] u8Pending
  *      Indicates if the config data will be segmented.
@@ -79,7 +88,7 @@ typedef struct {
  *  If false, no CRC function is called. Used when the CRC is automatically
  *  computed by hardware.
  *
- * @return 0 success, error code otherwise
+ * @retval 0 success, error code otherwise
  */
 int32_t
 Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
@@ -102,7 +111,7 @@ Mcb_FrameCreateConfig(Mcb_TFrame* tFrame, uint16_t u16Addr, uint8_t u8Cmd,
  *  If false, no CRC function is called. Used when the CRC is automatically
  *  computed by hardware.
  *
- * @return 0 success, error code otherwise
+ * @retval 0 success, error code otherwise
  */
 int32_t
 Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf,
@@ -113,7 +122,7 @@ Mcb_FrameAppendCyclic(Mcb_TFrame* tFrame, const void* pCyclicBuf,
  *
  * @param [in] tFrame
  *      Input frame.
- * @return Address.
+ * @retval Address.
  */
 uint16_t
 Mcb_FrameGetAddr(const Mcb_TFrame* tFrame);
@@ -123,7 +132,7 @@ Mcb_FrameGetAddr(const Mcb_TFrame* tFrame);
  *
  * @param [in] tFrame
  *      Input frame.
- * @return Command.
+ * @retval Command.
  */
 uint8_t
 Mcb_FrameGetCmd(const Mcb_TFrame* tFrame);
@@ -133,7 +142,7 @@ Mcb_FrameGetCmd(const Mcb_TFrame* tFrame);
  *
  * @param [in] tFrame
  *      Input frame.
- * @return true if config data is segmented.
+ * @retval true if config data is segmented.
  */
 bool
 Mcb_FrameGetSegmented(const Mcb_TFrame* tFrame);
@@ -145,7 +154,7 @@ Mcb_FrameGetSegmented(const Mcb_TFrame* tFrame);
  *  Input frame.
  * @param [out] pu16Buf
  *  Pointer to config data 
- * @return config data
+ * @retval config data
  */
 uint16_t
 Mcb_FrameGetConfigData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf);
@@ -157,7 +166,10 @@ Mcb_FrameGetConfigData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf);
  *  Input frame.
  * @param [out] pu16Buf
  *  Pointer to config data
- * @return cyclic data
+ * @param[in] u16Size
+ *  Sioze to be read
+ *
+ * @retval cyclic data
  */
 uint16_t
 Mcb_FrameGetCyclicData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf, uint16_t u16Size);
@@ -168,10 +180,12 @@ Mcb_FrameGetCyclicData(const Mcb_TFrame* tFrame, uint16_t* pu16Buf, uint16_t u16
  * @param[in] tFrame
  *  Input frame
  *
- * @return true if crc is correct
+ * @retval true if crc is correct
  *         false if crc is wrong
  */
 bool
 Mcb_FrameCheckCRC(const Mcb_TFrame* tFrame);
 
 #endif /* MCB_FRAME_H */
+
+/** @} */
