@@ -84,6 +84,11 @@ Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* p
 Mcb_EStatus
 Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+
+Mcb_EStatus
+Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
+                      uint16_t* pu16CfgSz, bool* isNewData);
+
 /**
  * Execute a cyclic transfer through MCB
  *
@@ -108,9 +113,8 @@ Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu
  *
  * @retval Mcb_EStatus
  */
-Mcb_EStatus
-Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
-                       uint16_t* pu16CfgSz, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz);
+void
+Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewData);
 #endif /* MCB_INTF_H */
 
 /** @} */

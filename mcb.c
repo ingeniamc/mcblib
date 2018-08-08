@@ -167,7 +167,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     return pMcbMsg->eStatus;
 }
 
-void Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg))
+void Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, bool (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg))
 {
     ptInst->CfgOverCyclicEvnt = Evnt;
 }
@@ -616,27 +616,30 @@ int32_t Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
 
 bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
 {
-    bool isDataTransmitted = false;
+    bool isDataTransmitted = true;
+    bool isCfgData;
 
     if (ptInst->isCyclic != false)
     {
-        Mcb_EStatus eResult = Mcb_IntfCyclicTransfer(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
-                &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
-                ptInst->u16CyclicTx, ptInst->u16CyclicRx, ptInst->u16CyclicSize);
+        Mcb_EStatus eResult = Mcb_IntfCfgOverCyclic(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
+                                                    &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
+                                                    &isCfgData);
 
         if (eResult != MCB_STANDBY)
         {
-            isDataTransmitted = true;
-
             if ((eResult == MCB_CYCLIC_SUCCESS) || (eResult == MCB_CYCLIC_ERROR))
             {
                 if (ptInst->CfgOverCyclicEvnt != NULL)
                 {
-                    ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
+                    isDataTransmitted = ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
                 }
             }
         }
 
+        if (isDataTransmitted != false)
+        {
+            Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx, ptInst->u16CyclicRx, ptInst->u16CyclicSize, isCfgData);
+        }
     }
 
     return isDataTransmitted;

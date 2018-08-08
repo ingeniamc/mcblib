@@ -96,7 +96,7 @@ struct Mcb_TInst
     /** TX mapping (from MCB slave point of view) list */
     Mcb_TMappingList tCyclicTxList;
     /** Callback to config over cyclic frame reception */
-    void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    bool (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
 
 /** Motion control bus frame types*/
@@ -171,7 +171,7 @@ Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
  *  User callback to be linked
  */
 void
-Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg));
+Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, bool (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg));
 
 /**
  * Map a Tx cyclic register into the cyclic buffer
