@@ -84,13 +84,8 @@ Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* p
 Mcb_EStatus
 Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
-
-Mcb_EStatus
-Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
-                      uint16_t* pu16CfgSz, bool* isNewData);
-
 /**
- * Execute a cyclic transfer through MCB
+ * Process config data inside cyclic  frames
  *
  * @param[in] ptInst
  *  Target instance
@@ -104,12 +99,28 @@ Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uin
  *  Data to be read / write through config
  * @param[in, out] pu16CfgSz
  *  Size of the configuration transmission
+ * @param[in] isNewData
+ *  Indicates if a new config data must be added into cyclic frame
+ *
+ * @retval Mcb_EStatus
+ */
+Mcb_EStatus
+Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd, uint16_t* pu16Data,
+                      uint16_t* pu16CfgSz, bool* isNewData);
+
+/**
+ * Execute a cyclic transfer through MCB
+ *
+ * @param[in] ptInst
+ *  Target instance
  * @param[in] ptInBuf
  *  Cyclic data to be sent
  * @param[out] ptOutBuf
  *  Received Cyclic data
  * @param[in] u16CyclicSz
  *  Cyclic transmission size
+ * @param[in] isNewData
+ *  Indicates if a new config data must be added into cyclic frame
  *
  * @retval Mcb_EStatus
  */
