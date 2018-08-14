@@ -1,4 +1,4 @@
-# moco-lib
+# MCBLib
 
 Motion core library implements the Ingenia Motion Control Bus protocol.
 
