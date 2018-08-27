@@ -127,7 +127,7 @@ void Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* ptInFrame, Mcb_TFrame
 }
 
 Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd,
-                                  uint16_t* pu16Data, uint16_t* pu16CfgSz, bool* isNewData)
+                                  uint16_t* pu16Data, uint16_t* pu16CfgSz, bool* pisNewData)
 {
     Mcb_EStatus eCyclicState = MCB_STANDBY;
     static uint16_t u16CurrentCmd = MCB_REQ_IDLE;
@@ -136,7 +136,7 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
     {
         eCyclicState = MCB_CYCLIC_REQUEST;
 
-        *isNewData = false;
+        *pisNewData = false;
 
         if (ptInst->isCfgOverCyclic == false)
         {
@@ -148,12 +148,12 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
                 {
                     case MCB_REQ_READ:
                         /** Generate initial frame */
-                        *isNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                        *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                         ptInst->isCfgOverCyclic = true;
                         break;
                     case MCB_REQ_WRITE:
                         /** Generate initial frame */
-                        *isNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                        *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                         ptInst->isCfgOverCyclic = true;
                         break;
                     default:
@@ -169,10 +169,10 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
             switch (u16CurrentCmd)
             {
                 case MCB_REQ_READ:
-                    *isNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                     break;
                 case MCB_REQ_WRITE:
-                    *isNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                     break;
                 default:
                     /** Nothing */
@@ -215,7 +215,6 @@ void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, ui
 {
     if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
     {
-        /** Indicate that a cyclic message is transmitted */
         /** Get cyclic data from last transmission */
         if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
         {
