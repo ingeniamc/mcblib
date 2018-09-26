@@ -343,7 +343,9 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
             /* Send read request */
             if (ptInst->isPending != false)
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, ptInst->bCalcCrc);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
+                /** Read is requested once, then IDLE are sent until the complete read is reached */
+                ptInst->isPending = false;
             }
             else
             {
@@ -360,7 +362,7 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
             {
                 case MCB_REP_ACK:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
+                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
 
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
@@ -392,7 +394,6 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                     break;
                 case MCB_REQ_IDLE:
                     ptInst->eState = MCB_READ_REQUEST;
-                    ptInst->isPending = false;
                     break;
                 default:
                     ptInst->eState = MCB_ERROR;
