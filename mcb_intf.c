@@ -126,9 +126,8 @@ void Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* ptInFrame, Mcb_TFrame
     Mcb_IntfSPITransfer(ptInst->u16Id, ptInFrame->u16Buf, ptOutFrame->u16Buf, ptInFrame->u16Sz);
 }
 
-Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
-                    uint16_t* pu16Cmd, uint16_t* pu16Data, uint16_t* pu16CfgSz,
-                    uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz)
+Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Cmd,
+                                  uint16_t* pu16Data, uint16_t* pu16CfgSz, bool* pisNewData)
 {
     Mcb_EStatus eCyclicState = MCB_STANDBY;
     static uint16_t u16CurrentCmd = MCB_REQ_IDLE;
@@ -136,14 +135,8 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
     if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
     {
         eCyclicState = MCB_CYCLIC_REQUEST;
-        /** Indicate that a cyclic message is transmitted */
-        /** Get cyclic data from last transmission */
-        if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
-        {
-            Mcb_FrameGetCyclicData(&ptInst->tRxfrm, ptOutBuf, u16CyclicSz);
-        }
 
-        bool isNewData = false;
+        *pisNewData = false;
 
         if (ptInst->isCfgOverCyclic == false)
         {
@@ -155,12 +148,12 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
                 {
                     case MCB_REQ_READ:
                         /** Generate initial frame */
-                        isNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                        *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                         ptInst->isCfgOverCyclic = true;
                         break;
                     case MCB_REQ_WRITE:
                         /** Generate initial frame */
-                        isNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                        *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                         ptInst->isCfgOverCyclic = true;
                         break;
                     default:
@@ -176,10 +169,10 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
             switch (u16CurrentCmd)
             {
                 case MCB_REQ_READ:
-                    isNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                     break;
                 case MCB_REQ_WRITE:
-                    isNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
                     break;
                 default:
                     /** Nothing */
@@ -213,6 +206,20 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
                     break;
             }
         }
+    }
+
+    return eCyclicState;
+}
+
+void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewData)
+{
+    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
+    {
+        /** Get cyclic data from last transmission */
+        if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
+        {
+            Mcb_FrameGetCyclicData(&ptInst->tRxfrm, ptOutBuf, u16CyclicSz);
+        }
 
         if (isNewData == false)
         {
@@ -228,8 +235,6 @@ Mcb_EStatus Mcb_IntfCyclicTransfer(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t
         ptInst->isIrqEvnt = false;
         Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
     }
-
-    return eCyclicState;
 }
 
 static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz)
@@ -338,7 +343,9 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
             /* Send read request */
             if (ptInst->isPending != false)
             {
-                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, ptInst->bCalcCrc);
+                Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
+                /** Read is requested once, then IDLE are sent until the complete read is reached */
+                ptInst->isPending = false;
             }
             else
             {
@@ -355,7 +362,7 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
             {
                 case MCB_REP_ACK:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
+                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
 
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
@@ -387,7 +394,6 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                     break;
                 case MCB_REQ_IDLE:
                     ptInst->eState = MCB_READ_REQUEST;
-                    ptInst->isPending = false;
                     break;
                 default:
                     ptInst->eState = MCB_ERROR;
