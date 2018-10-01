@@ -567,23 +567,33 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 int32_t Mcb_DisableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
+    int32_t i32Res = 0;
 
     if (ptInst->isCyclic != false)
     {
-        tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
-        tMcbMsg.u16Addr = ADDR_COMM_STATE;
-        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
-        tMcbMsg.u16Size = WORDSIZE_16BIT;
-        tMcbMsg.u16Data[0] = (uint16_t) 1U;
+        if ((ptInst->tIntf.eState == MCB_STANDBY) || (ptInst->tIntf.eState == MCB_SUCCESS) ||
+            (ptInst->tIntf.eState == MCB_WRITE_ERROR) || (ptInst->tIntf.eState == MCB_READ_ERROR) ||
+            (ptInst->tIntf.eState == MCB_ERROR))
+        {
+            tMcbMsg.eStatus = MCB_STANDBY;
+            tMcbMsg.u16Node = 2;
+            tMcbMsg.u16Addr = ADDR_COMM_STATE;
+            tMcbMsg.u16Cmd = MCB_REQ_WRITE;
+            tMcbMsg.u16Size = WORDSIZE_16BIT;
+            tMcbMsg.u16Data[0] = (uint16_t) 1U;
 
-        /** Cyclic will be disabled through cyclic messages */
-        tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+            /** Cyclic will be disabled through cyclic messages */
+            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
 
-        ptInst->isCyclic2Cfg = true;
+            ptInst->isCyclic2Cfg = true;
+        }
+        else
+        {
+            i32Res = -1;
+        }
     }
 
-    return 0;
+    return i32Res;
 }
 
 int32_t Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
@@ -622,7 +632,7 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
     bool isDataTransmitted = true;
     bool isCfgData;
 
-    if (ptInst->isCyclic != false)
+    if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false) && (ptInst->tIntf.isIrqEvnt != false))
     {
         Mcb_EStatus eResult = Mcb_IntfCfgOverCyclic(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
                                                     &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
