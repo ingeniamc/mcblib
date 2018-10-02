@@ -76,7 +76,9 @@ typedef struct Mcb_TInst Mcb_TInst;
 struct Mcb_TInst
 {
     /** Indicates if mcb is in cyclic mode */
-    bool isCyclic;
+    volatile bool isCyclic;
+    /** Indicates if a Cyclic to Config request is active */
+    volatile bool isCyclic2Cfg;
     /** Indicates the timeout applied for blocking transmissions */
     uint32_t u32Timeout;
     /** Linked mcb module */
@@ -96,7 +98,7 @@ struct Mcb_TInst
     /** TX mapping (from MCB slave point of view) list */
     Mcb_TMappingList tCyclicTxList;
     /** Callback to config over cyclic frame reception */
-    bool (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
 
 /** Motion control bus frame types*/
@@ -171,7 +173,7 @@ Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
  *  User callback to be linked
  */
 void
-Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, bool (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg));
+Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg));
 
 /**
  * Map a Tx cyclic register into the cyclic buffer

@@ -21,6 +21,7 @@
 void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout)
 {
     ptInst->isCyclic = false;
+    ptInst->isCyclic2Cfg = false;
     ptInst->eMode = eMode;
     ptInst->u32Timeout = u32Timeout;
 
@@ -167,7 +168,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     return pMcbMsg->eStatus;
 }
 
-void Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, bool (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg))
+void Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg))
 {
     ptInst->CfgOverCyclicEvnt = Evnt;
 }
@@ -578,6 +579,8 @@ int32_t Mcb_DisableCyclic(Mcb_TInst* ptInst)
 
         /** Cyclic will be disabled through cyclic messages */
         tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+
+        ptInst->isCyclic2Cfg = true;
     }
 
     return 0;
@@ -625,14 +628,20 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
                                                     &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
                                                     &isCfgData);
 
-        if (eResult != MCB_STANDBY)
+        if ((eResult == MCB_CYCLIC_SUCCESS) || (eResult == MCB_CYCLIC_ERROR))
         {
-            if ((eResult == MCB_CYCLIC_SUCCESS) || (eResult == MCB_CYCLIC_ERROR))
+            if (ptInst->isCyclic2Cfg == false)
             {
                 if (ptInst->CfgOverCyclicEvnt != NULL)
                 {
-                    isDataTransmitted = ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
+                    ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
                 }
+            }
+            else
+            {
+                isDataTransmitted = false;
+                ptInst->isCyclic2Cfg = false;
+                ptInst->isCyclic = false;
             }
         }
 
