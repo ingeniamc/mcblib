@@ -270,8 +270,11 @@ Mcb_EnableCyclic(Mcb_TInst* ptInst);
  *
  * @param[in] ptInst
  *  Mcb instance
+ *
+ *  @retval MCB_CYCLIC_SUCCESS is disable is executed,
+ *          MCB_CYCLIC_ERROR otherwise
  */
-int32_t
+Mcb_EStatus
 Mcb_DisableCyclic(Mcb_TInst* ptInst);
 
 /**

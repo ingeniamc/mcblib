@@ -132,79 +132,75 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
     Mcb_EStatus eCyclicState = MCB_STANDBY;
     static uint16_t u16CurrentCmd = MCB_REQ_IDLE;
 
-    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
+    *pisNewData = false;
+
+    if (ptInst->isCfgOverCyclic == false)
     {
-        eCyclicState = MCB_CYCLIC_REQUEST;
-
-        *pisNewData = false;
-
-        if (ptInst->isCfgOverCyclic == false)
+        if (ptInst->isNewCfgOverCyclic != false)
         {
-            if (ptInst->isNewCfgOverCyclic != false)
-            {
-                /** If a config command is requested, add it into cyclic frame */
-                u16CurrentCmd = *pu16Cmd;
-                switch (u16CurrentCmd)
-                {
-                    case MCB_REQ_READ:
-                        /** Generate initial frame */
-                        *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
-                        ptInst->isCfgOverCyclic = true;
-                        break;
-                    case MCB_REQ_WRITE:
-                        /** Generate initial frame */
-                        *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
-                        ptInst->isCfgOverCyclic = true;
-                        break;
-                    default:
-                        /** Nothing */
-                        break;
-                }
-                ptInst->isNewCfgOverCyclic = false;
-            }
-        }
-        else
-        {
-            /** Keep on processing the config request */
+            eCyclicState = MCB_CYCLIC_REQUEST;
+            /** If a config command is requested, add it into cyclic frame */
+            u16CurrentCmd = *pu16Cmd;
             switch (u16CurrentCmd)
             {
                 case MCB_REQ_READ:
+                    /** Generate initial frame */
                     *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    ptInst->isCfgOverCyclic = true;
                     break;
                 case MCB_REQ_WRITE:
+                    /** Generate initial frame */
                     *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                    ptInst->isCfgOverCyclic = true;
                     break;
                 default:
                     /** Nothing */
                     break;
             }
+            ptInst->isNewCfgOverCyclic = false;
+        }
+    }
+    else
+    {
+        /** Keep on processing the config request */
+        switch (u16CurrentCmd)
+        {
+            case MCB_REQ_READ:
+                *pisNewData = Mcb_IntfReadCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                break;
+            case MCB_REQ_WRITE:
+                *pisNewData = Mcb_IntfWriteCfgOverCyclic(ptInst, u16Addr, pu16Data, pu16CfgSz);
+                break;
+            default:
+                /** Nothing */
+                break;
+        }
 
-            switch (ptInst->eState)
-            {
-                case MCB_SUCCESS:
-                    *pu16Cmd = MCB_REP_ACK;
-                    ptInst->isCfgOverCyclic = false;
-                    eCyclicState = MCB_CYCLIC_SUCCESS;
-                    break;
-                case MCB_WRITE_ERROR:
-                    *pu16Cmd = MCB_REP_WRITE_ERROR;
-                    ptInst->isCfgOverCyclic = false;
-                    eCyclicState = MCB_CYCLIC_ERROR;
-                    break;
-                case MCB_READ_ERROR:
-                    *pu16Cmd = MCB_REP_READ_ERROR;
-                    ptInst->isCfgOverCyclic = false;
-                    eCyclicState = MCB_CYCLIC_ERROR;
-                    break;
-                case MCB_ERROR:
-                    *pu16Cmd |= MCB_REP_ERROR;
-                    ptInst->isCfgOverCyclic = false;
-                    eCyclicState = MCB_CYCLIC_ERROR;
-                    break;
-                default:
-                    /** Nothing */
-                    break;
-            }
+        switch (ptInst->eState)
+        {
+            case MCB_SUCCESS:
+                *pu16Cmd = MCB_REP_ACK;
+                ptInst->isCfgOverCyclic = false;
+                eCyclicState = MCB_CYCLIC_SUCCESS;
+                break;
+            case MCB_WRITE_ERROR:
+                *pu16Cmd = MCB_REP_WRITE_ERROR;
+                ptInst->isCfgOverCyclic = false;
+                eCyclicState = MCB_CYCLIC_ERROR;
+                break;
+            case MCB_READ_ERROR:
+                *pu16Cmd = MCB_REP_READ_ERROR;
+                ptInst->isCfgOverCyclic = false;
+                eCyclicState = MCB_CYCLIC_ERROR;
+                break;
+            case MCB_ERROR:
+                *pu16Cmd |= MCB_REP_ERROR;
+                ptInst->isCfgOverCyclic = false;
+                eCyclicState = MCB_CYCLIC_ERROR;
+                break;
+            default:
+                eCyclicState = MCB_CYCLIC_REQUEST;
+                break;
         }
     }
 
@@ -213,28 +209,25 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
 
 void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewData)
 {
-    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
+    /** Get cyclic data from last transmission */
+    if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
     {
-        /** Get cyclic data from last transmission */
-        if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
-        {
-            Mcb_FrameGetCyclicData(&ptInst->tRxfrm, ptOutBuf, u16CyclicSz);
-        }
-
-        if (isNewData == false)
-        {
-            /** The CRC can only be appended by the AppendCyclic() */
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
-            Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->bCalcCrc);
-        }
-        else
-        {
-            Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->bCalcCrc);
-        }
-
-        ptInst->isIrqEvnt = false;
-        Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+        Mcb_FrameGetCyclicData(&ptInst->tRxfrm, ptOutBuf, u16CyclicSz);
     }
+
+    if (isNewData == false)
+    {
+        /** The CRC can only be appended by the AppendCyclic() */
+        Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, false);
+        Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->bCalcCrc);
+    }
+    else
+    {
+        Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->bCalcCrc);
+    }
+
+    ptInst->isIrqEvnt = false;
+    Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
 }
 
 static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz)
