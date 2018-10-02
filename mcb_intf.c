@@ -504,8 +504,7 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
     {
         case MCB_READ_REQUEST:
             /* Send read request */
-            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, pu16Data, false);
-
+            Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_READ, MCB_FRM_NOTSEG, NULL, false);
             isNewData = true;
             ptInst->eState = MCB_READ_ANSWER;
             break;
@@ -521,7 +520,7 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
                     {
                         if (Mcb_FrameGetSegmented(&(ptInst->tRxfrm)) != false)
                         {
-                            ptInst->eState = MCB_READ_REQUEST;
+                            ptInst->eState = MCB_READ_ANSWER;
                         }
                         else
                         {
