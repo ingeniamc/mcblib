@@ -564,10 +564,10 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
     return i32Result;
 }
 
-int32_t Mcb_DisableCyclic(Mcb_TInst* ptInst)
+Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
-    int32_t i32Res = 0;
+    Mcb_EStatus  eRes = MCB_CYCLIC_SUCCESS;
 
     if (ptInst->isCyclic != false)
     {
@@ -589,11 +589,11 @@ int32_t Mcb_DisableCyclic(Mcb_TInst* ptInst)
         }
         else
         {
-            i32Res = -1;
+            eRes = MCB_CYCLIC_ERROR;
         }
     }
 
-    return i32Res;
+    return eRes;
 }
 
 int32_t Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
