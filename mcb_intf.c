@@ -507,7 +507,7 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
             {
                 case MCB_REP_ACK:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), pu16Data);
+                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
 
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
