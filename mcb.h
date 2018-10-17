@@ -298,7 +298,7 @@ Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
  * @retval true if a cyclic transmission is done
  *         false otherwise
  */
-bool
+Mcb_EStatus
 Mcb_CyclicProcess(Mcb_TInst* ptInst);
 
 #endif
