@@ -627,13 +627,15 @@ int32_t Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
     return 0;
 }
 
-bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
+Mcb_EStatus Mcb_CyclicProcess(Mcb_TInst* ptInst)
 {
-    bool isDataTransmitted = true;
+    Mcb_EStatus eState = MCB_STANDBY;
     bool isCfgData;
 
     if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false) && (ptInst->tIntf.isIrqEvnt != false))
     {
+        eState = MCB_CYCLIC_REQUEST;
+
         Mcb_EStatus eResult = Mcb_IntfCfgOverCyclic(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
                                                     &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
                                                     &isCfgData);
@@ -649,18 +651,18 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst)
             }
             else
             {
-                isDataTransmitted = false;
+                eState = eResult;
                 ptInst->isCyclic2Cfg = false;
                 ptInst->isCyclic = false;
             }
         }
 
-        if (isDataTransmitted != false)
+        if (eState == MCB_CYCLIC_REQUEST)
         {
             Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx, ptInst->u16CyclicRx, ptInst->u16CyclicSize, isCfgData);
         }
     }
 
-    return isDataTransmitted;
+    return eState;
 }
 
