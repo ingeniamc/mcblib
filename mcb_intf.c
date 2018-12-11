@@ -180,6 +180,7 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
         {
             case MCB_SUCCESS:
                 *pu16Cmd = MCB_REP_ACK;
+                *pu16CfgSz = ptInst->u16Sz;
                 ptInst->isCfgOverCyclic = false;
                 eCyclicState = MCB_CYCLIC_SUCCESS;
                 break;
