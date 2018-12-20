@@ -22,6 +22,11 @@
 #include <stdbool.h>
 #include "mcb_frame.h"
 
+/** Number of necessary mutex instances */
+#define MCB_NUMBER_MUTEX_RESOURCES (uint16_t)1U
+/** Irq mutex instance Id */
+#define MUTEX_IRQ_RESOURCE (uint16_t)0U
+
 /** McbIntf Pin status */
 typedef enum
 {
@@ -77,8 +82,6 @@ typedef struct
     volatile bool isNewCfgOverCyclic;
     /** Indicates if a config request has been requested over cyclic state */
     volatile bool isCfgOverCyclic;
-    /** IRQ Event signal */
-    volatile bool isIrqEvnt;
     /** Frame pool for holding tx data */
     Mcb_TFrame tTxfrm;
     /** Frame pool for holding rx data */
@@ -183,6 +186,44 @@ Mcb_IntfSPITransfer(uint16_t u16Id, uint16_t* pu16In, uint16_t* pu16Out, uint16_
  */
 void
 Mcb_IntfSyncSignal(uint16_t u16Id);
+
+/**
+ * Initialize the instance with the Id.
+ * @note The Mutex instance has to be initialized in non blocking state
+ *
+ * @param[in] u16Id
+ *  Instance Id to be initialized
+ */
+void
+Mcb_IntfInitMutex(uint16_t u16Id);
+
+/**
+ * Delete the instance with the Id.
+ *
+ * @param[in] u16Id
+ *  Instance Id to be removed
+ */
+void
+Mcb_IntfDeinitMutex(uint16_t u16Id);
+
+/**
+ * Try to take the mutex instance with the Id.
+ * @note Non blocking function
+ *
+ * @param[in] u16Id
+ *  Instance Id to be taken
+ */
+bool
+Mcb_IntfTryLockMutex(uint16_t u16Id);
+
+/**
+ * Free the instance with the Id.
+ *
+ * @param[in] u16Id
+ *  Instance Id to be free
+ */
+void
+Mcb_IntfUnlockMutex(uint16_t u16Id);
 
 #endif /* MCB_USR_H */
 

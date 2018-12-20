@@ -10,6 +10,9 @@
 #include "mcb_usr.h"
 #include "mcb_checksum.h"
 
+/** Struct used when no mutex instance defined by user */
+volatile bool ptFlag[MCB_NUMBER_MUTEX_RESOURCES];
+
 __attribute__((weak))uint32_t Mcb_GetMillis(void)
 {
     /** Return milliseconds */
@@ -60,4 +63,50 @@ __attribute__((weak))void Mcb_IntfSPITransfer(uint16_t u16Id, uint16_t* pu16In, 
 __attribute__((weak))void Mcb_IntfSyncSignal(uint16_t u16Id)
 {
 
+}
+
+__attribute__((weak))void Mcb_IntfInitMutex(uint16_t u16Id)
+{
+    /** Init the mutex instance, in non blocking state */
+
+    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    {
+        ptFlag[u16Id] = true;
+    }
+}
+
+__attribute__((weak))void Mcb_IntfDeinitMutex(uint16_t u16Id)
+{
+    /** Remove the mutex instance */
+
+    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    {
+        ptFlag[u16Id] = false;
+    }
+}
+
+__attribute__((weak))bool Mcb_IntfTryLockMutex(uint16_t u16Id)
+{
+    /** Non blocking lock of the mutex */
+
+    bool isMutexLock = false;
+
+    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    {
+        if (ptFlag[u16Id] != false)
+        {
+            ptFlag[u16Id] = false;
+            isMutexLock = true;
+        }
+    }
+    return isMutexLock;
+}
+
+__attribute__((weak))void Mcb_IntfUnlockMutex(uint16_t u16Id)
+{
+    /** Unlock the mutex instance */
+    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    {
+        ptFlag[u16Id] = true;
+    }
 }
