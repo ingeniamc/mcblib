@@ -22,9 +22,9 @@
 #include <stdbool.h>
 #include "mcb_frame.h"
 
-/** Number of necessary mutex instances */
+/** Number of mutex instances */
 #define MCB_NUMBER_MUTEX_RESOURCES (uint16_t)1U
-/** Irq mutex instance Id */
+/** IRQ mutex instance Id */
 #define MUTEX_IRQ_RESOURCE (uint16_t)0U
 
 /** McbIntf Pin status */
@@ -188,8 +188,9 @@ void
 Mcb_IntfSyncSignal(uint16_t u16Id);
 
 /**
- * Initialize the instance with the Id.
- * @note The Mutex instance has to be initialized in non blocking state
+ * Initialize instance
+ *
+ * @note The Mutex instance has to be initialized in unlock state
  *
  * @param[in] u16Id
  *  Instance Id to be initialized
@@ -198,16 +199,17 @@ void
 Mcb_IntfInitMutex(uint16_t u16Id);
 
 /**
- * Delete the instance with the Id.
+ * Delete instance
  *
  * @param[in] u16Id
- *  Instance Id to be removed
+ *  Instance Id to be deleted
  */
 void
 Mcb_IntfDeinitMutex(uint16_t u16Id);
 
 /**
- * Try to take the mutex instance with the Id.
+ * Try to take mutex instance
+ *
  * @note Non blocking function
  *
  * @param[in] u16Id
@@ -217,10 +219,10 @@ bool
 Mcb_IntfTryLockMutex(uint16_t u16Id);
 
 /**
- * Free the instance with the Id.
+ * Unlock instance
  *
  * @param[in] u16Id
- *  Instance Id to be free
+ *  Instance Id to be unlocked
  */
 void
 Mcb_IntfUnlockMutex(uint16_t u16Id);
