@@ -632,7 +632,7 @@ Mcb_EStatus Mcb_CyclicProcess(Mcb_TInst* ptInst)
     Mcb_EStatus eState = MCB_STANDBY;
     bool isCfgData;
 
-    if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false) && Mcb_IntfTryLockMutex(MUTEX_IRQ_RESOURCE))
+    if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false) && (Mcb_IntfTryLockSem(SEMAPHORE_IRQ_RESOURCE) != false))
     {
         eState = MCB_CYCLIC_REQUEST;
 
@@ -663,7 +663,7 @@ Mcb_EStatus Mcb_CyclicProcess(Mcb_TInst* ptInst)
         }
         else
         {
-            Mcb_IntfUnlockMutex(MUTEX_IRQ_RESOURCE);
+            Mcb_IntfUnlockSem(SEMAPHORE_IRQ_RESOURCE);
         }
     }
 

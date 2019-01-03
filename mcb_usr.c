@@ -10,8 +10,8 @@
 #include "mcb_usr.h"
 #include "mcb_checksum.h"
 
-/** Struct used when no mutex instance defined by user */
-volatile bool ptFlag[MCB_NUMBER_MUTEX_RESOURCES];
+/** Struct used when no semaphore instance defined by user */
+volatile bool ptFlag[MCB_NUMBER_SEMAPHORE_RESOURCES];
 
 __attribute__((weak))uint32_t Mcb_GetMillis(void)
 {
@@ -65,44 +65,44 @@ __attribute__((weak))void Mcb_IntfSyncSignal(uint16_t u16Id)
 
 }
 
-__attribute__((weak))void Mcb_IntfInitMutex(uint16_t u16Id)
+__attribute__((weak))void Mcb_IntfInitSem(uint16_t u16Id)
 {
-    /** Init the mutex instance, unlock state */
-    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    /** Init the semaphore instance, unlock state */
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
     {
         ptFlag[u16Id] = true;
     }
 }
 
-__attribute__((weak))void Mcb_IntfDeinitMutex(uint16_t u16Id)
+__attribute__((weak))void Mcb_IntfDeinitSem(uint16_t u16Id)
 {
-    /** Remove the mutex instance */
-    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    /** Remove the semaphore instance */
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
     {
         ptFlag[u16Id] = false;
     }
 }
 
-__attribute__((weak))bool Mcb_IntfTryLockMutex(uint16_t u16Id)
+__attribute__((weak))bool Mcb_IntfTryLockSem(uint16_t u16Id)
 {
-    /** Non blocking mutex lock */
-    bool isMutexLock = false;
+    /** Non blocking semaphore lock */
+    bool isSemLock = false;
 
-    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
     {
         if (ptFlag[u16Id] != false)
         {
             ptFlag[u16Id] = false;
-            isMutexLock = true;
+            isSemLock = true;
         }
     }
-    return isMutexLock;
+    return isSemLock;
 }
 
-__attribute__((weak))void Mcb_IntfUnlockMutex(uint16_t u16Id)
+__attribute__((weak))void Mcb_IntfUnlockSem(uint16_t u16Id)
 {
-    /** Unlock mutex instance */
-    if (u16Id < MCB_NUMBER_MUTEX_RESOURCES)
+    /** Unlock semaphore instance */
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
     {
         ptFlag[u16Id] = true;
     }

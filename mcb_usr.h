@@ -22,10 +22,10 @@
 #include <stdbool.h>
 #include "mcb_frame.h"
 
-/** Number of mutex instances */
-#define MCB_NUMBER_MUTEX_RESOURCES (uint16_t)1U
-/** IRQ mutex instance Id */
-#define MUTEX_IRQ_RESOURCE (uint16_t)0U
+/** Number of semaphores instances */
+#define MCB_NUMBER_SEMAPHORE_RESOURCES (uint16_t)1U
+/** IRQ semaphore instance Id */
+#define SEMAPHORE_IRQ_RESOURCE (uint16_t)0U
 
 /** McbIntf Pin status */
 typedef enum
@@ -188,35 +188,37 @@ void
 Mcb_IntfSyncSignal(uint16_t u16Id);
 
 /**
- * Initialize instance
+ * Initialize binary semaphore instance
  *
- * @note The Mutex instance has to be initialized in unlock state
+ * @note The semaphore instance has to be initialized in unlock state
  *
  * @param[in] u16Id
  *  Instance Id to be initialized
  */
 void
-Mcb_IntfInitMutex(uint16_t u16Id);
+Mcb_IntfInitSem(uint16_t u16Id);
 
 /**
- * Delete instance
+ * Delete semaphore instance
  *
  * @param[in] u16Id
  *  Instance Id to be deleted
  */
 void
-Mcb_IntfDeinitMutex(uint16_t u16Id);
+Mcb_IntfDeinitSem(uint16_t u16Id);
 
 /**
- * Try to take mutex instance
+ * Try to take semaphore instance
  *
  * @note Non blocking function
  *
  * @param[in] u16Id
  *  Instance Id to be taken
+ *
+ * @retval TRUE if semaphore lock, FALSE otherwise
  */
 bool
-Mcb_IntfTryLockMutex(uint16_t u16Id);
+Mcb_IntfTryLockSem(uint16_t u16Id);
 
 /**
  * Unlock instance
@@ -225,7 +227,7 @@ Mcb_IntfTryLockMutex(uint16_t u16Id);
  *  Instance Id to be unlocked
  */
 void
-Mcb_IntfUnlockMutex(uint16_t u16Id);
+Mcb_IntfUnlockSem(uint16_t u16Id);
 
 #endif /* MCB_USR_H */
 
