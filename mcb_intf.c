@@ -31,21 +31,21 @@ Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Dat
 void Mcb_IntfInit(Mcb_TIntf* ptInst)
 {
     ptInst->eState = MCB_STANDBY;
-    ptInst->isIrqEvnt = true;
+    Mcb_IntfInitSem(SEMAPHORE_IRQ_RESOURCE);
     ptInst->isCfgOverCyclic = false;
 }
 
 void Mcb_IntfDeinit(Mcb_TIntf* ptInst)
 {
     ptInst->eState = MCB_STANDBY;
-    ptInst->isIrqEvnt = false;
+    Mcb_IntfDeinitSem(SEMAPHORE_IRQ_RESOURCE);
     ptInst->isCfgOverCyclic = false;
 }
 
 void Mcb_IntfReset(Mcb_TIntf* ptInst)
 {
     ptInst->eState = MCB_STANDBY;
-    ptInst->isIrqEvnt = true;
+    Mcb_IntfInitSem(SEMAPHORE_IRQ_RESOURCE);
 }
 
 Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data,
@@ -54,7 +54,7 @@ Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
     bool isNewData = false;
 
     /** Check if data is already available (IRQ) & SPI is ready for transmission */
-    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
+    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (Mcb_IntfTryLockSem(SEMAPHORE_IRQ_RESOURCE) != false))
     {
         if ((ptInst->eState == MCB_WRITE_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) == false))
         {
@@ -77,6 +77,10 @@ Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
         {
             Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
         }
+        else
+        {
+            Mcb_IntfUnlockSem(SEMAPHORE_IRQ_RESOURCE);
+        }
     }
 
     return ptInst->eState;
@@ -87,7 +91,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
     bool isNewData = false;
 
     /** Check if data is already available (IRQ) & SPI is ready for transmission */
-    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (ptInst->isIrqEvnt != false))
+    if ((Mcb_IntfIsReady(ptInst->u16Id) != false) && (Mcb_IntfTryLockSem(SEMAPHORE_IRQ_RESOURCE) != false))
     {
         if ((ptInst->eState == MCB_READ_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) == false))
         {
@@ -111,6 +115,10 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
         {
             Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
         }
+        else
+        {
+            Mcb_IntfUnlockSem(SEMAPHORE_IRQ_RESOURCE);
+        }
     }
 
     return ptInst->eState;
@@ -118,7 +126,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
 
 void Mcb_IntfIRQEvent(Mcb_TIntf* ptInst)
 {
-    ptInst->isIrqEvnt = true;
+    Mcb_IntfUnlockSem(SEMAPHORE_IRQ_RESOURCE);
 }
 
 void Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* ptInFrame, Mcb_TFrame* ptOutFrame)
@@ -227,7 +235,6 @@ void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, ui
         Mcb_FrameAppendCyclic(&(ptInst->tTxfrm), ptInBuf, u16CyclicSz, ptInst->bCalcCrc);
     }
 
-    ptInst->isIrqEvnt = false;
     Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
 }
 
@@ -265,7 +272,6 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                 ptInst->u16Sz = 0;
             }
 
-            ptInst->isIrqEvnt = false;
             isNewData = true;
             ptInst->eState = MCB_WRITE_ANSWER;
             break;
@@ -346,7 +352,6 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                 Mcb_FrameCreateConfig(&(ptInst->tTxfrm), u16Addr, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
             }
 
-            ptInst->isIrqEvnt = false;
             isNewData = true;
             ptInst->eState = MCB_READ_ANSWER;
             break;
