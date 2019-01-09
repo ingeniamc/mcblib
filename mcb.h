@@ -28,7 +28,7 @@
 #define MCB_DFLT_TIMEOUT 500
 
 /** Maximum number of mapped registers simultaneously */
-#define MAX_MAPPED_REG (uint8_t)8U
+#define MAX_MAPPED_REG (uint8_t)15U
 
 /** Motion control bus mode of operation */
 typedef enum
