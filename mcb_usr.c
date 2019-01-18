@@ -10,6 +10,9 @@
 #include "mcb_usr.h"
 #include "mcb_checksum.h"
 
+/** Struct used when no semaphore instance defined by user */
+volatile bool ptFlag[MCB_NUMBER_SEMAPHORE_RESOURCES];
+
 __attribute__((weak))uint32_t Mcb_GetMillis(void)
 {
     /** Return milliseconds */
@@ -60,4 +63,47 @@ __attribute__((weak))void Mcb_IntfSPITransfer(uint16_t u16Id, uint16_t* pu16In, 
 __attribute__((weak))void Mcb_IntfSyncSignal(uint16_t u16Id)
 {
 
+}
+
+__attribute__((weak))void Mcb_IntfInitSem(uint16_t u16Id)
+{
+    /** Init the semaphore instance, unlock state */
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    {
+        ptFlag[u16Id] = true;
+    }
+}
+
+__attribute__((weak))void Mcb_IntfDeinitSem(uint16_t u16Id)
+{
+    /** Remove the semaphore instance */
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    {
+        ptFlag[u16Id] = false;
+    }
+}
+
+__attribute__((weak))bool Mcb_IntfTryLockSem(uint16_t u16Id)
+{
+    /** Non blocking semaphore lock */
+    bool isSemLock = false;
+
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    {
+        if (ptFlag[u16Id] != false)
+        {
+            ptFlag[u16Id] = false;
+            isSemLock = true;
+        }
+    }
+    return isSemLock;
+}
+
+__attribute__((weak))void Mcb_IntfUnlockSem(uint16_t u16Id)
+{
+    /** Unlock semaphore instance */
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    {
+        ptFlag[u16Id] = true;
+    }
 }

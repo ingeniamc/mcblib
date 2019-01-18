@@ -22,6 +22,11 @@
 #include <stdbool.h>
 #include "mcb_frame.h"
 
+/** Number of semaphores instances */
+#define MCB_NUMBER_SEMAPHORE_RESOURCES (uint16_t)1U
+/** IRQ semaphore instance Id */
+#define SEMAPHORE_IRQ_RESOURCE (uint16_t)0U
+
 /** McbIntf Pin status */
 typedef enum
 {
@@ -77,8 +82,6 @@ typedef struct
     volatile bool isNewCfgOverCyclic;
     /** Indicates if a config request has been requested over cyclic state */
     volatile bool isCfgOverCyclic;
-    /** IRQ Event signal */
-    volatile bool isIrqEvnt;
     /** Frame pool for holding tx data */
     Mcb_TFrame tTxfrm;
     /** Frame pool for holding rx data */
@@ -183,6 +186,48 @@ Mcb_IntfSPITransfer(uint16_t u16Id, uint16_t* pu16In, uint16_t* pu16Out, uint16_
  */
 void
 Mcb_IntfSyncSignal(uint16_t u16Id);
+
+/**
+ * Initialize binary semaphore instance
+ *
+ * @note The semaphore instance has to be initialized in unlock state
+ *
+ * @param[in] u16Id
+ *  Instance Id to be initialized
+ */
+void
+Mcb_IntfInitSem(uint16_t u16Id);
+
+/**
+ * Delete semaphore instance
+ *
+ * @param[in] u16Id
+ *  Instance Id to be deleted
+ */
+void
+Mcb_IntfDeinitSem(uint16_t u16Id);
+
+/**
+ * Try to take semaphore instance
+ *
+ * @note Non blocking function
+ *
+ * @param[in] u16Id
+ *  Instance Id to be taken
+ *
+ * @retval TRUE if semaphore lock, FALSE otherwise
+ */
+bool
+Mcb_IntfTryLockSem(uint16_t u16Id);
+
+/**
+ * Unlock instance
+ *
+ * @param[in] u16Id
+ *  Instance Id to be unlocked
+ */
+void
+Mcb_IntfUnlockSem(uint16_t u16Id);
 
 #endif /* MCB_USR_H */
 
