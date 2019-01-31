@@ -105,6 +105,19 @@ void
 Mcb_IntfIRQEvent(Mcb_TIntf* ptInst);
 
 /**
+ * Reads the value of the IRQ signal
+ *
+ * @note This function is used to see if a mcb slave is available
+ *
+ * @param[in] ptInst
+ *  Pointer to McbIntf instace linked to this interrupt
+ *
+ * @retval 0 if pin is at LOW level, 1 if it at HIGH level
+ */
+uint8_t
+Mcb_IntfReadIRQ(uint16_t u16Id);
+
+/**
  * Checks if the SPI interface is ready for a new
  * transmission
  *
