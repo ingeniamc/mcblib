@@ -126,6 +126,8 @@ typedef enum
  *  computed by hardware.
  * @param[in] u32Timeout
  *  Indicates the applied timeout for blocking tranmissions in milliseconds
+ *
+ *  @retval MCB_SUCCESS if slave IRQ signal is HIGH, MCB_ERROR otherwise
  */
 Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout);
 

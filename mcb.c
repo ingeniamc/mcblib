@@ -45,7 +45,7 @@ Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bC
     ptInst->tIntf.bCalcCrc = bCalcCrc;
     Mcb_IntfInit(&ptInst->tIntf);
 
-    if (Mcb_IntfReadIRQ(u16Id) == (uint8_t)0U)
+    if (Mcb_IntfReadIRQ(u16Id) == (uint8_t)0)
     {
         eRet = MCB_ERROR;
     }

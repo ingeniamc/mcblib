@@ -109,8 +109,8 @@ Mcb_IntfIRQEvent(Mcb_TIntf* ptInst);
  *
  * @note This function is used to see if a mcb slave is available
  *
- * @param[in] ptInst
- *  Pointer to McbIntf instace linked to this interrupt
+ * @param[in] u16Id
+ *  Id of the McbIntf used to identify multiple instances
  *
  * @retval 0 if pin is at LOW level, 1 if it at HIGH level
  */
