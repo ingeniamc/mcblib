@@ -13,10 +13,19 @@
 /** Struct used when no semaphore instance defined by user */
 volatile bool ptFlag[MCB_NUMBER_SEMAPHORE_RESOURCES];
 
+__attribute__((weak))uint8_t Mcb_IntfReadIRQ(uint16_t u16Id)
+{
+    /*
+     * Return a 0 which means LOW level indicating that the slave is not
+     * available
+     */
+    return (uint8_t)0U;
+}
+
 __attribute__((weak))uint32_t Mcb_GetMillis(void)
 {
     /** Return milliseconds */
-    return 0;
+    return (uint32_t)0U;
 }
 
 __attribute__((weak))bool Mcb_IntfIsReady(uint16_t u16Id)

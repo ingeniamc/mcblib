@@ -18,8 +18,9 @@
 #define WORDSIZE_16BIT      1
 #define WORDSIZE_32BIT      2
 
-void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout)
+Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout)
 {
+    Mcb_EStatus eRet = MCB_SUCCESS;
     ptInst->isCyclic = false;
     ptInst->isCyclic2Cfg = false;
     ptInst->eMode = eMode;
@@ -43,6 +44,13 @@ void Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc,
     ptInst->tIntf.u16Id = u16Id;
     ptInst->tIntf.bCalcCrc = bCalcCrc;
     Mcb_IntfInit(&ptInst->tIntf);
+
+    if (Mcb_IntfReadIRQ(u16Id) == (uint8_t)0)
+    {
+        eRet = MCB_ERROR;
+    }
+
+    return eRet;
 }
 
 void Mcb_Deinit(Mcb_TInst* ptInst)

@@ -45,6 +45,7 @@ void Mcb_IntfDeinit(Mcb_TIntf* ptInst)
 void Mcb_IntfReset(Mcb_TIntf* ptInst)
 {
     ptInst->eState = MCB_STANDBY;
+    Mcb_IntfDeinitSem(SEMAPHORE_IRQ_RESOURCE);
     Mcb_IntfInitSem(SEMAPHORE_IRQ_RESOURCE);
 }
 
