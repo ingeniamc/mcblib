@@ -30,6 +30,18 @@
 /** Maximum number of mapped registers simultaneously */
 #define MAX_MAPPED_REG (uint8_t)15U
 
+/* Return code list during enabling cyclic mode */
+/** Cyclic mode reached correctly */
+#define CYCLIC_MODE_OK (int32_t)0
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_RX_MAP (int32_t)-1
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_TX_MAP (int32_t)-2
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_VALIDATION (int32_t)-3
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_SYNC (int32_t)-4
+
 /** Motion control bus mode of operation */
 typedef enum
 {
@@ -38,6 +50,19 @@ typedef enum
     /** Non Blocking mode, if not ready, return state */
     MCB_NON_BLOCKING
 } Mcb_EMode;
+
+/** Motion control bus frame types*/
+typedef enum
+{
+    /** Cyclic mode without sync */
+    MCB_CYC_NON_SYNC = 0,
+    /** Cyclic mode with sync 0 enabled */
+    MCB_CYC_SYNC0,
+    /** Cyclic mode with sync 1 enabled */
+    MCB_CYC_SYNC1,
+    /** Cyclic mode with sync 0 & sync 1 enabled */
+    MCB_CYC_SYNC0_SYNC1
+} Mcb_ECyclicMode;
 
 /** Frame data struct */
 typedef struct
@@ -79,6 +104,8 @@ struct Mcb_TInst
     volatile bool isCyclic;
     /** Indicates if a Cyclic to Config request is active */
     volatile bool isCyclic2Cfg;
+    /** Indicates the active syncrhonisation config */
+    Mcb_ECyclicMode eSyncMode;
     /** Indicates the timeout applied for blocking transmissions */
     uint32_t u32Timeout;
     /** Linked mcb module */
@@ -100,15 +127,6 @@ struct Mcb_TInst
     /** Callback to config over cyclic frame reception */
     void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
-
-/** Motion control bus frame types*/
-typedef enum
-{
-    /** Cyclic mode without sync */
-    MCB_CYC_NON_SYNC = 0,
-    /** Cyclic mode with sync enabled */
-    MCB_CYC_SYNC
-} Mcb_ECyclicMode;
 
 /** 
  * Initialization of a mcb instance 
@@ -288,7 +306,7 @@ Mcb_DisableCyclic(Mcb_TInst* ptInst);
  *  Mcb instance
  * @param[in] eNewCycMode Desired cyclic mode.
  */
-int32_t
+void
 Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
 
 /**

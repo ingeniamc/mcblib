@@ -25,6 +25,7 @@ Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bC
     ptInst->isCyclic2Cfg = false;
     ptInst->eMode = eMode;
     ptInst->u32Timeout = u32Timeout;
+    ptInst->eSyncMode = MCB_CYC_NON_SYNC;
 
     ptInst->CfgOverCyclicEvnt = NULL;
 
@@ -445,17 +446,16 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
 int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
-    int32_t i32Result = 0;
+    int32_t i32Result = CYCLIC_MODE_OK;
 
     if (ptInst->isCyclic == false)
     {
-        /** Check and setup RX mapping */
         tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = 2;
-        tMcbMsg.u16Addr = RX_MAP_BASE;
+        tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
-        tMcbMsg.u16Data[0] = ptInst->tCyclicRxList.u8Mapped;
+        tMcbMsg.u16Data[0] = (uint16_t)ptInst->eSyncMode;
 
         uint32_t u32Millis = Mcb_GetMillis();
 
@@ -477,7 +477,39 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                 /** Do nothing */
                 break;
             default:
-                i32Result = -1;
+                i32Result = CYCLIC_ERR_SYNC;
+                break;
+        }
+
+        /** Check and setup RX mapping */
+        tMcbMsg.eStatus = MCB_STANDBY;
+        tMcbMsg.u16Node = 2;
+        tMcbMsg.u16Addr = RX_MAP_BASE;
+        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
+        tMcbMsg.u16Size = WORDSIZE_16BIT;
+        tMcbMsg.u16Data[0] = ptInst->tCyclicRxList.u8Mapped;
+
+        u32Millis = Mcb_GetMillis();
+
+        do
+        {
+            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+            {
+                tMcbMsg.eStatus = MCB_ERROR;
+                break;
+            }
+
+        } while ((tMcbMsg.eStatus != MCB_ERROR) && (tMcbMsg.eStatus != MCB_SUCCESS));
+
+        switch (tMcbMsg.eStatus)
+        {
+            case MCB_SUCCESS:
+                /** Do nothing */
+                break;
+            default:
+                i32Result = CYCLIC_ERR_RX_MAP;
                 break;
         }
 
@@ -511,7 +543,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                     /** Do nothing */
                     break;
                 default:
-                    i32Result = -2;
+                    i32Result = CYCLIC_ERR_TX_MAP;
                     break;
             }
         }
@@ -546,13 +578,13 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                     /** Do nothing*/
                     break;
                 default:
-                    i32Result = -3;
+                    i32Result = CYCLIC_ERR_VALIDATION;
                     break;
             }
         }
 
         /** If cyclic mode is correctly enabled */
-        if (i32Result == 0)
+        if (i32Result == CYCLIC_MODE_OK)
         {
             /** Check bigger mapping and set up generated frame size */
             if (ptInst->tCyclicRxList.u16MappedSize > ptInst->tCyclicTxList.u16MappedSize)
@@ -604,35 +636,9 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
     return eRes;
 }
 
-int32_t Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
+void Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
 {
-    Mcb_TMsg tMcbMsg;
-
-    if (ptInst->isCyclic == false)
-    {
-        tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
-        tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
-        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
-        tMcbMsg.u16Size = WORDSIZE_16BIT;
-        tMcbMsg.u16Data[0] = (uint16_t) eNewCycMode;
-
-        uint32_t u32Millis = Mcb_GetMillis();
-
-        do
-        {
-            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
-
-            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
-            {
-                tMcbMsg.eStatus = MCB_ERROR;
-                break;
-            }
-
-        } while ((tMcbMsg.eStatus != MCB_ERROR) && (tMcbMsg.eStatus != MCB_SUCCESS));
-    }
-
-    return 0;
+    ptInst->eSyncMode = eNewCycMode;
 }
 
 Mcb_EStatus Mcb_CyclicProcess(Mcb_TInst* ptInst)
