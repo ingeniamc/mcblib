@@ -22,7 +22,6 @@ Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bC
 {
     Mcb_EStatus eRet = MCB_SUCCESS;
     ptInst->isCyclic = false;
-    ptInst->isCyclic2Cfg = false;
     ptInst->eMode = eMode;
     ptInst->u32Timeout = u32Timeout;
     ptInst->eSyncMode = MCB_CYC_NON_SYNC;
@@ -624,8 +623,6 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 
             /** Cyclic will be disabled through cyclic messages */
             tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
-
-            ptInst->isCyclic2Cfg = true;
         }
         else
         {
@@ -656,17 +653,13 @@ Mcb_EStatus Mcb_CyclicProcess(Mcb_TInst* ptInst)
 
         if ((eResult == MCB_CYCLIC_SUCCESS) || (eResult == MCB_CYCLIC_ERROR))
         {
-            if (ptInst->isCyclic2Cfg == false)
+            if (ptInst->CfgOverCyclicEvnt != NULL)
             {
-                if (ptInst->CfgOverCyclicEvnt != NULL)
-                {
-                    ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
-                }
+                ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
             }
-            else
+
+            if (ptInst->tConfig.u16Addr == ADDR_COMM_STATE)
             {
-                eState = eResult;
-                ptInst->isCyclic2Cfg = false;
                 ptInst->isCyclic = false;
             }
         }

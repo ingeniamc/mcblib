@@ -102,8 +102,6 @@ struct Mcb_TInst
 {
     /** Indicates if mcb is in cyclic mode */
     volatile bool isCyclic;
-    /** Indicates if a Cyclic to Config request is active */
-    volatile bool isCyclic2Cfg;
     /** Indicates the active syncrhonisation config */
     Mcb_ECyclicMode eSyncMode;
     /** Indicates the timeout applied for blocking transmissions */
