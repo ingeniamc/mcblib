@@ -42,6 +42,11 @@
 /** Cyclic mode reached correctly */
 #define CYCLIC_ERR_SYNC (int32_t)-4
 
+/** Default MCB Coco Node */
+#define DEFAULT_COCO_NODE (uint16_t)0U
+/** Default MCB Moco Node */
+#define DEFAULT_MOCO_NODE (uint16_t)1U
+
 /** Motion control bus mode of operation */
 typedef enum
 {

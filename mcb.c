@@ -190,7 +190,7 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     if (ptInst->tCyclicTxList.u8Mapped < MAX_MAPPED_REG)
     {
         tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
+        tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = TX_MAP_BASE + ptInst->tCyclicTxList.u8Mapped + 1;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_32BIT;
@@ -239,7 +239,7 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     if (ptInst->tCyclicRxList.u8Mapped < MAX_MAPPED_REG)
     {
         tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
+        tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = RX_MAP_BASE + ptInst->tCyclicRxList.u8Mapped + 1;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_32BIT;
@@ -286,7 +286,7 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
 
     /** Set up internal struct and verify a proper configuration */
     tMcbMsg.eStatus = MCB_STANDBY;
-    tMcbMsg.u16Node = 2;
+    tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = TX_MAP_BASE + ptInst->tCyclicTxList.u8Mapped + 1;
     tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_32BIT;
@@ -332,7 +332,7 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
 
     /** Set up internal struct and verify a proper configuration */
     tMcbMsg.eStatus = MCB_STANDBY;
-    tMcbMsg.u16Node = 2;
+    tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = RX_MAP_BASE + ptInst->tCyclicRxList.u8Mapped + 1;
     tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_32BIT;
@@ -377,7 +377,7 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
 
     /** Set up internal struct and verify a proper configuration */
     tMcbMsg.eStatus = MCB_STANDBY;
-    tMcbMsg.u16Node = 2;
+    tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = RX_MAP_BASE;
     tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_16BIT;
@@ -410,7 +410,7 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
 
     /** Set up internal struct and verify a proper configuration */
     tMcbMsg.eStatus = MCB_STANDBY;
-    tMcbMsg.u16Node = 2;
+    tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = TX_MAP_BASE;
     tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_16BIT;
@@ -450,7 +450,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
     if (ptInst->isCyclic == false)
     {
         tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
+        tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
@@ -482,7 +482,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
         /** Check and setup RX mapping */
         tMcbMsg.eStatus = MCB_STANDBY;
-        tMcbMsg.u16Node = 2;
+        tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = RX_MAP_BASE;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
@@ -516,7 +516,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         {
             /** If RX mapping was OK, check and setup TX mapping */
             tMcbMsg.eStatus = MCB_STANDBY;
-            tMcbMsg.u16Node = 2;
+            tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
             tMcbMsg.u16Addr = TX_MAP_BASE;
             tMcbMsg.u16Cmd = MCB_REQ_WRITE;
             tMcbMsg.u16Size = WORDSIZE_16BIT;
@@ -551,7 +551,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         {
             /** If both mappings are OK, enable cyclic mode */
             tMcbMsg.eStatus = MCB_STANDBY;
-            tMcbMsg.u16Node = 2;
+            tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
             tMcbMsg.u16Addr = ADDR_COMM_STATE;
             tMcbMsg.u16Cmd = MCB_REQ_WRITE;
             tMcbMsg.u16Size = WORDSIZE_16BIT;
@@ -615,7 +615,7 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
             (ptInst->tIntf.eState == MCB_ERROR))
         {
             tMcbMsg.eStatus = MCB_STANDBY;
-            tMcbMsg.u16Node = 2;
+            tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
             tMcbMsg.u16Addr = ADDR_COMM_STATE;
             tMcbMsg.u16Cmd = MCB_REQ_WRITE;
             tMcbMsg.u16Size = WORDSIZE_16BIT;
