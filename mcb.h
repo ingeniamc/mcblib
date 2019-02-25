@@ -192,6 +192,8 @@ Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
  * Attach an user callback to the reception event of a config frame over
  * Cyclic mode
  *
+ * @note Config over cyclic event can not be attached in blocking mode
+ *
  * @param[in] ptInst
  *  Instance where callback is going to be linked
  * @param[in] Evnt
