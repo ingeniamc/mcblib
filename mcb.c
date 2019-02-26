@@ -726,6 +726,7 @@ Mcb_EStatus Mcb_CyclicProcess(Mcb_TInst* ptInst)
 
             if (ptInst->tConfig.u16Addr == ADDR_COMM_STATE)
             {
+                eState = MCB_CYCLIC_SUCCESS;
                 ptInst->isCyclic = false;
             }
         }
