@@ -93,8 +93,6 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
 
 Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    uint16_t u16sz;
-
     pMcbMsg->eStatus = MCB_ERROR;
 
     if (ptInst->isCyclic == false)
@@ -120,8 +118,8 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
         else
         {
             /** Non blocking mode */
-            pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
-                    &u16sz);
+            pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
+                                             &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
         }
 
         if (pMcbMsg->eStatus != MCB_SUCCESS)
