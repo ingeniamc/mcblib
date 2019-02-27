@@ -148,9 +148,9 @@ struct Mcb_TInst
  * @param[in] u32Timeout
  *  Indicates the applied timeout for blocking tranmissions in milliseconds
  *
- *  @retval MCB_SUCCESS if slave IRQ signal is HIGH, MCB_ERROR otherwise
+ *  @retval 0 if slave IRQ signal is HIGH, -1 otherwise
  */
-Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout);
+int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout);
 
 /**
  * Deinitializes a mcb instance
@@ -323,8 +323,8 @@ Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
  * @retval true if a cyclic transmission is done
  *         false otherwise
  */
-Mcb_EStatus
-Mcb_CyclicProcess(Mcb_TInst* ptInst);
+bool
+Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* eCfgStat);
 
 #endif
 
