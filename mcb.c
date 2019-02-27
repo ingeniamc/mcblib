@@ -758,6 +758,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
             }
         }
 
+        ptInst->tConfig.eStatus = eState;
+
         if (isTransfer != false)
         {
             Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx, ptInst->u16CyclicRx, ptInst->u16CyclicSize, isCfgData);
