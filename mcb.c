@@ -164,7 +164,7 @@ Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
             {
                     pMcbMsg->u16Cmd = MCB_REQ_WRITE;
                     memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
-                    pMcbMsg->eStatus = MCB_WRITE_SUCCESS;
+                    pMcbMsg->eStatus = MCB_STANDBY;
                     ptInst->tIntf.isNewCfgOverCyclic = true;
             }
         }
@@ -247,7 +247,7 @@ Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
             {
                     pMcbMsg->u16Cmd = MCB_REQ_READ;
                     memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
-                    pMcbMsg->eStatus = MCB_READ_SUCCESS;
+                    pMcbMsg->eStatus = MCB_STANDBY;
                     ptInst->tIntf.isNewCfgOverCyclic = true;
             }
         }
