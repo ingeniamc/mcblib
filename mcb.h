@@ -186,6 +186,12 @@ Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 Mcb_EStatus
 Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 
+Mcb_EStatus
+Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+
+Mcb_EStatus
+Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+
 /**
  * Attach an user callback to the reception event of a config frame over
  * Cyclic mode
