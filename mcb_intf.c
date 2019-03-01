@@ -59,7 +59,7 @@ Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
     {
         if ((ptInst->eState == MCB_WRITE_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) == false))
         {
-            ptInst->eState = MCB_ERROR;
+            ptInst->eState = MCB_WRITE_ERROR;
         }
         else
         {
@@ -67,7 +67,7 @@ Mcb_EStatus Mcb_IntfWrite(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr,
         }
 
         /** Set up a new frame if an error is detected */
-        if (ptInst->eState == MCB_ERROR)
+        if (ptInst->eState == MCB_WRITE_ERROR)
         {
             Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
             isNewData = true;
@@ -96,7 +96,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
     {
         if ((ptInst->eState == MCB_READ_ANSWER) && (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) == false))
         {
-            ptInst->eState = MCB_ERROR;
+            ptInst->eState = MCB_READ_ERROR;
         }
         else
         {
@@ -104,7 +104,7 @@ Mcb_EStatus Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, 
         }
 
         /** Set up a new frame if an error is detected */
-        if (ptInst->eState == MCB_ERROR)
+        if (ptInst->eState == MCB_READ_ERROR)
         {
             Mcb_FrameCreateConfig(&(ptInst->tTxfrm), 0, MCB_REQ_IDLE, MCB_FRM_NOTSEG, NULL, ptInst->bCalcCrc);
             isNewData = true;
@@ -147,7 +147,6 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
     {
         if (ptInst->isNewCfgOverCyclic != false)
         {
-            eCyclicState = MCB_CYCLIC_REQUEST;
             /** If a config command is requested, add it into cyclic frame */
             u16CurrentCmd = *pu16Cmd;
             switch (u16CurrentCmd)
@@ -187,29 +186,30 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
 
         switch (ptInst->eState)
         {
-            case MCB_SUCCESS:
+            case MCB_WRITE_SUCCESS:
                 *pu16Cmd = MCB_REP_ACK;
                 *pu16CfgSz = ptInst->u16Sz;
                 ptInst->isCfgOverCyclic = false;
-                eCyclicState = MCB_CYCLIC_SUCCESS;
+                eCyclicState = MCB_WRITE_SUCCESS;
+                break;
+            case MCB_READ_SUCCESS:
+                *pu16Cmd = MCB_REP_ACK;
+                *pu16CfgSz = ptInst->u16Sz;
+                ptInst->isCfgOverCyclic = false;
+                eCyclicState = MCB_READ_SUCCESS;
                 break;
             case MCB_WRITE_ERROR:
                 *pu16Cmd = MCB_REP_WRITE_ERROR;
                 ptInst->isCfgOverCyclic = false;
-                eCyclicState = MCB_CYCLIC_ERROR;
+                eCyclicState = MCB_WRITE_ERROR;
                 break;
             case MCB_READ_ERROR:
                 *pu16Cmd = MCB_REP_READ_ERROR;
                 ptInst->isCfgOverCyclic = false;
-                eCyclicState = MCB_CYCLIC_ERROR;
-                break;
-            case MCB_ERROR:
-                *pu16Cmd |= MCB_REP_ERROR;
-                ptInst->isCfgOverCyclic = false;
-                eCyclicState = MCB_CYCLIC_ERROR;
+                eCyclicState = MCB_READ_ERROR;
                 break;
             default:
-                eCyclicState = MCB_CYCLIC_REQUEST;
+                /* Nothing */
                 break;
         }
     }
@@ -243,9 +243,8 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
 {
     bool isNewData = false;
 
-    if ((ptInst->eState == MCB_STANDBY) || (ptInst->eState == MCB_SUCCESS) ||
-        (ptInst->eState == MCB_WRITE_ERROR) || (ptInst->eState == MCB_READ_ERROR) ||
-        (ptInst->eState == MCB_ERROR))
+    if ((ptInst->eState != MCB_READ_REQUEST) && (ptInst->eState != MCB_READ_ANSWER) &&
+        (ptInst->eState != MCB_WRITE_REQUEST) && (ptInst->eState != MCB_WRITE_ANSWER))
     {
         ptInst->u16Sz = *pu16Sz;
         ptInst->isPending = true;
@@ -290,12 +289,12 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                         else
                         {
                             ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
-                            ptInst->eState = MCB_SUCCESS;
+                            ptInst->eState = MCB_WRITE_SUCCESS;
                         }
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_WRITE_ERROR;
                     }
                     break;
                 case MCB_REP_WRITE_ERROR:
@@ -306,14 +305,14 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_WRITE_ERROR;
                     }
                     break;
                 case MCB_REQ_IDLE:
                     ptInst->eState = MCB_WRITE_REQUEST;
                     break;
                 default:
-                    ptInst->eState = MCB_ERROR;
+                    ptInst->eState = MCB_WRITE_ERROR;
                     break;
             }
             break;
@@ -329,9 +328,8 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
 {
     bool isNewData = false;
 
-    if ((ptInst->eState == MCB_STANDBY) || (ptInst->eState == MCB_SUCCESS) ||
-        (ptInst->eState == MCB_WRITE_ERROR) || (ptInst->eState == MCB_READ_ERROR) ||
-        (ptInst->eState == MCB_ERROR))
+    if ((ptInst->eState != MCB_READ_REQUEST) && (ptInst->eState != MCB_READ_ANSWER) &&
+        (ptInst->eState != MCB_WRITE_REQUEST) && (ptInst->eState != MCB_WRITE_ANSWER))
     {
         ptInst->isPending = true;
         ptInst->eState = MCB_READ_REQUEST;
@@ -373,12 +371,12 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                         else
                         {
                             *pu16Sz = ptInst->u16Sz;
-                            ptInst->eState = MCB_SUCCESS;
+                            ptInst->eState = MCB_READ_SUCCESS;
                         }
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_READ_ERROR;
                     }
                     break;
                 case MCB_REP_READ_ERROR:
@@ -389,14 +387,14 @@ static bool Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16D
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_READ_ERROR;
                     }
                     break;
                 case MCB_REQ_IDLE:
                     ptInst->eState = MCB_READ_REQUEST;
                     break;
                 default:
-                    ptInst->eState = MCB_ERROR;
+                    ptInst->eState = MCB_READ_ERROR;
                     break;
             }
             break;
@@ -412,9 +410,8 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
 {
     bool isNewData = false;
 
-    if ((ptInst->eState == MCB_STANDBY) || (ptInst->eState == MCB_SUCCESS) ||
-        (ptInst->eState == MCB_WRITE_ERROR) || (ptInst->eState == MCB_READ_ERROR) ||
-        (ptInst->eState == MCB_ERROR))
+    if ((ptInst->eState != MCB_READ_REQUEST) && (ptInst->eState != MCB_READ_ANSWER) &&
+        (ptInst->eState != MCB_WRITE_REQUEST) && (ptInst->eState != MCB_WRITE_ANSWER))
     {
         ptInst->u16Sz = *pu16Sz;
         ptInst->eState = MCB_WRITE_REQUEST;
@@ -453,12 +450,12 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
                         else
                         {
                             ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
-                            ptInst->eState = MCB_SUCCESS;
+                            ptInst->eState = MCB_WRITE_SUCCESS;
                         }
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_WRITE_ERROR;
                     }
                     break;
                 case MCB_REP_WRITE_ERROR:
@@ -469,14 +466,14 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_WRITE_ERROR;
                     }
                     break;
                 case MCB_REQ_IDLE:
                     /** Waiting for reply */
                     break;
                 default:
-                    ptInst->eState = MCB_ERROR;
+                    ptInst->eState = MCB_WRITE_ERROR;
                     break;
             }
             break;
@@ -492,9 +489,8 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
 {
     bool isNewData = false;
 
-    if ((ptInst->eState == MCB_STANDBY) || (ptInst->eState == MCB_SUCCESS) ||
-        (ptInst->eState == MCB_WRITE_ERROR) || (ptInst->eState == MCB_READ_ERROR) ||
-        (ptInst->eState == MCB_ERROR))
+    if ((ptInst->eState != MCB_READ_REQUEST) && (ptInst->eState != MCB_READ_ANSWER) &&
+        (ptInst->eState != MCB_WRITE_REQUEST) && (ptInst->eState != MCB_WRITE_ANSWER))
     {
         ptInst->eState = MCB_READ_REQUEST;
         ptInst->u16Sz = 0;
@@ -525,12 +521,12 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
                         else
                         {
                             *pu16Sz = ptInst->u16Sz;
-                            ptInst->eState = MCB_SUCCESS;
+                            ptInst->eState = MCB_READ_SUCCESS;
                         }
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_READ_ERROR;
                     }
                     break;
                 case MCB_REP_READ_ERROR:
@@ -541,14 +537,14 @@ static bool Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint1
                     }
                     else
                     {
-                        ptInst->eState = MCB_ERROR;
+                        ptInst->eState = MCB_READ_ERROR;
                     }
                     break;
                 case MCB_REQ_IDLE:
                     /** Waiting for new data */
                     break;
                 default:
-                    ptInst->eState = MCB_ERROR;
+                    ptInst->eState = MCB_READ_ERROR;
                     break;
             }
             break;
