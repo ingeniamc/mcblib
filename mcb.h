@@ -30,6 +30,28 @@
 /** Maximum number of mapped registers simultaneously */
 #define MAX_MAPPED_REG (uint8_t)15U
 
+/* Return code list during enabling cyclic mode */
+/** Cyclic mode reached correctly */
+#define CYCLIC_MODE_OK (int32_t)0L
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_RX_MAP (int32_t)-1L
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_TX_MAP (int32_t)-2L
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_VALIDATION (int32_t)-3L
+/** Cyclic mode reached correctly */
+#define CYCLIC_ERR_SYNC (int32_t)-4L
+
+/** Default MCB Coco Node */
+#define DEFAULT_COCO_NODE (uint16_t)0U
+/** Default MCB Moco Node */
+#define DEFAULT_MOCO_NODE (uint16_t)1U
+
+/** Correct initialization of the MCB interface */
+#define MCB_INIT_OK (int32_t)0L
+/** Wrong initialization of the MCB interface */
+#define MCB_INIT_KO (int32_t)-1L
+
 /** Motion control bus mode of operation */
 typedef enum
 {
@@ -38,6 +60,19 @@ typedef enum
     /** Non Blocking mode, if not ready, return state */
     MCB_NON_BLOCKING
 } Mcb_EMode;
+
+/** Motion control bus frame types*/
+typedef enum
+{
+    /** Cyclic mode without sync */
+    MCB_CYC_NON_SYNC = 0,
+    /** Cyclic mode with sync 0 enabled */
+    MCB_CYC_SYNC0,
+    /** Cyclic mode with sync 1 enabled */
+    MCB_CYC_SYNC1,
+    /** Cyclic mode with sync 0 & sync 1 enabled */
+    MCB_CYC_SYNC0_SYNC1
+} Mcb_ECyclicMode;
 
 /** Frame data struct */
 typedef struct
@@ -77,8 +112,8 @@ struct Mcb_TInst
 {
     /** Indicates if mcb is in cyclic mode */
     volatile bool isCyclic;
-    /** Indicates if a Cyclic to Config request is active */
-    volatile bool isCyclic2Cfg;
+    /** Indicates the active syncrhonisation config */
+    Mcb_ECyclicMode eSyncMode;
     /** Indicates the timeout applied for blocking transmissions */
     uint32_t u32Timeout;
     /** Linked mcb module */
@@ -101,15 +136,6 @@ struct Mcb_TInst
     void (*CfgOverCyclicEvnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 };
 
-/** Motion control bus frame types*/
-typedef enum
-{
-    /** Cyclic mode without sync */
-    MCB_CYC_NON_SYNC = 0,
-    /** Cyclic mode with sync enabled */
-    MCB_CYC_SYNC
-} Mcb_ECyclicMode;
-
 /** 
  * Initialization of a mcb instance 
  *
@@ -127,9 +153,9 @@ typedef enum
  * @param[in] u32Timeout
  *  Indicates the applied timeout for blocking tranmissions in milliseconds
  *
- *  @retval MCB_SUCCESS if slave IRQ signal is HIGH, MCB_ERROR otherwise
+ *  @retval 0 if slave IRQ signal is HIGH, -1 otherwise
  */
-Mcb_EStatus Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout);
+int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout);
 
 /**
  * Deinitializes a mcb instance
@@ -168,6 +194,8 @@ Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 /**
  * Attach an user callback to the reception event of a config frame over
  * Cyclic mode
+ *
+ * @note Config over cyclic event can not be attached in blocking mode
  *
  * @param[in] ptInst
  *  Instance where callback is going to be linked
@@ -288,7 +316,7 @@ Mcb_DisableCyclic(Mcb_TInst* ptInst);
  *  Mcb instance
  * @param[in] eNewCycMode Desired cyclic mode.
  */
-int32_t
+void
 Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
 
 /**
@@ -300,8 +328,8 @@ Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
  * @retval true if a cyclic transmission is done
  *         false otherwise
  */
-Mcb_EStatus
-Mcb_CyclicProcess(Mcb_TInst* ptInst);
+bool
+Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* eCfgStat);
 
 #endif
 

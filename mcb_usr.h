@@ -39,8 +39,10 @@ typedef enum
 /** McbIntf communication states */
 typedef enum
 {
-    /** Transmission successful */
-    MCB_SUCCESS = 0,
+    /** Write request success */
+    MCB_WRITE_SUCCESS = 0,
+    /** Read request success */
+    MCB_READ_SUCCESS,
     /** Bus in stand by */
     MCB_STANDBY,
     /** Sending a write request */
@@ -55,14 +57,6 @@ typedef enum
     MCB_WRITE_ERROR,
     /** Read config request error */
     MCB_READ_ERROR,
-    /** Config request over cyclic pending */
-    MCB_CYCLIC_REQUEST,
-    /** Cyclic request over cyclic successfully finished */
-    MCB_CYCLIC_SUCCESS,
-    /** Cyclic request over cyclic finished with error */
-    MCB_CYCLIC_ERROR,
-    /** Transaction error */
-    MCB_ERROR,
 } Mcb_EStatus;
 
 /** Motion control communication interface instance */
