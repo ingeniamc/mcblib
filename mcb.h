@@ -32,20 +32,25 @@
 
 /* Return code list during enabling cyclic mode */
 /** Cyclic mode reached correctly */
-#define CYCLIC_MODE_OK (int32_t)0
+#define CYCLIC_MODE_OK (int32_t)0L
 /** Cyclic mode reached correctly */
-#define CYCLIC_ERR_RX_MAP (int32_t)-1
+#define CYCLIC_ERR_RX_MAP (int32_t)-1L
 /** Cyclic mode reached correctly */
-#define CYCLIC_ERR_TX_MAP (int32_t)-2
+#define CYCLIC_ERR_TX_MAP (int32_t)-2L
 /** Cyclic mode reached correctly */
-#define CYCLIC_ERR_VALIDATION (int32_t)-3
+#define CYCLIC_ERR_VALIDATION (int32_t)-3L
 /** Cyclic mode reached correctly */
-#define CYCLIC_ERR_SYNC (int32_t)-4
+#define CYCLIC_ERR_SYNC (int32_t)-4L
 
 /** Default MCB Coco Node */
 #define DEFAULT_COCO_NODE (uint16_t)0U
 /** Default MCB Moco Node */
 #define DEFAULT_MOCO_NODE (uint16_t)1U
+
+/** Correct initialization of the MCB interface */
+#define MCB_INIT_OK (int32_t)0L
+/** Wrong initialization of the MCB interface */
+#define MCB_INIT_KO (int32_t)-1L
 
 /** Motion control bus mode of operation */
 typedef enum
