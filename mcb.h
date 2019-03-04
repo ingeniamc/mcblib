@@ -116,9 +116,9 @@ struct Mcb_TInst
     /** Transmission mode */
     Mcb_EMode eMode;
     /** Callback to read function */
-    Mcb_EStatus (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    void (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Callback to write function */
-    Mcb_EStatus (*Mcb_Write)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    void (*Mcb_Write)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Config transmission Msg */
     Mcb_TMsg tConfig;
     /** Cyclic transmission (from MCB master point of view) buffer */
