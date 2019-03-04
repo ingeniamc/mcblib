@@ -121,6 +121,8 @@ struct Mcb_TInst
     void (*Mcb_Write)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Config transmission Msg */
     Mcb_TMsg tConfig;
+    /** Config message user pointer */
+    Mcb_TMsg* ptUsrConfig;
     /** Cyclic transmission (from MCB master point of view) buffer */
     uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
     /** Cyclic reception (from MCB master point of view) buffer */

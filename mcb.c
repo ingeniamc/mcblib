@@ -168,9 +168,9 @@ static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     else
     {
         memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->ptUsrConfig = pMcbMsg;
         ptInst->tIntf.isNewCfgOverCyclic = true;
 
-        /* TODO: this while wait to callback not the correct way to wait*/
         do
         {
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
@@ -179,13 +179,8 @@ static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                 Mcb_IntfReset(&ptInst->tIntf);
                 break;
             }
-        } while((ptInst->tConfig.eStatus != MCB_READ_ERROR)
-                && (ptInst->tConfig.eStatus != MCB_READ_SUCCESS));
-
-        if (pMcbMsg->eStatus == MCB_STANDBY)
-        {
-            memcpy((void*)pMcbMsg, (const void*)&ptInst->tConfig, sizeof(Mcb_TMsg));
-        }
+        } while((ptInst->tIntf.isNewCfgOverCyclic == true)
+                || (ptInst->tIntf.isCfgOverCyclic == true));
     }
 
     if (pMcbMsg->eStatus == MCB_READ_ERROR)
@@ -222,9 +217,9 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     else
     {
         memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->ptUsrConfig = pMcbMsg;
         ptInst->tIntf.isNewCfgOverCyclic = true;
 
-        /* TODO: this while wait to callback not the correct way to wait*/
         do
         {
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
@@ -233,13 +228,8 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                 Mcb_IntfReset(&ptInst->tIntf);
                 break;
             }
-        } while((ptInst->tConfig.eStatus != MCB_WRITE_ERROR)
-                && (ptInst->tConfig.eStatus != MCB_WRITE_SUCCESS));
-
-        if (pMcbMsg->eStatus == MCB_STANDBY)
-        {
-            memcpy((void*)pMcbMsg, (const void*)&ptInst->tConfig, sizeof(Mcb_TMsg));
-        }
+        } while((ptInst->tIntf.isNewCfgOverCyclic == true)
+                || (ptInst->tIntf.isCfgOverCyclic == true));
     }
 
     if (pMcbMsg->eStatus == MCB_WRITE_ERROR)
@@ -264,18 +254,11 @@ static void Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     }
     else
     {
-        if ((ptInst->tConfig.eStatus != MCB_WRITE_REQUEST) && (ptInst->tConfig.eStatus != MCB_READ_REQUEST)
-            && (ptInst->tConfig.eStatus != MCB_WRITE_ANSWER) && (ptInst->tConfig.eStatus != MCB_READ_ANSWER))
+        if ((ptInst->tIntf.isNewCfgOverCyclic == false) && (ptInst->tIntf.isCfgOverCyclic == false))
         {
             pMcbMsg->eStatus = MCB_STANDBY;
             memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
             ptInst->tIntf.isNewCfgOverCyclic = true;
-        }
-
-        /** TODO: this memcpy in callback */
-        if ((ptInst->tConfig.eStatus == MCB_READ_ERROR) || (ptInst->tConfig.eStatus == MCB_READ_SUCCESS))
-        {
-            memcpy((void*)pMcbMsg, (const void*)&ptInst->tConfig, sizeof(Mcb_TMsg));
         }
     }
 
@@ -305,12 +288,6 @@ static void Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
             pMcbMsg->eStatus = MCB_STANDBY;
             memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
             ptInst->tIntf.isNewCfgOverCyclic = true;
-        }
-
-        /** TODO: this memcpy in callback */
-        if ((ptInst->tConfig.eStatus == MCB_WRITE_ERROR) || (ptInst->tConfig.eStatus == MCB_WRITE_SUCCESS))
-        {
-            memcpy((void*)pMcbMsg, (const void*)&ptInst->tConfig, sizeof(Mcb_TMsg));
         }
     }
 
@@ -818,5 +795,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
 static void Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    /* Nothing */
+    if ((ptInst->ptUsrConfig != NULL) && (pMcbMsg != NULL))
+    {
+        memcpy((void*)ptInst->ptUsrConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+    }
 }
