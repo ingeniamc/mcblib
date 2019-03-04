@@ -761,6 +761,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
         if ((eState == MCB_WRITE_SUCCESS) || (eState == MCB_WRITE_ERROR) ||
             (eState == MCB_READ_SUCCESS) || (eState == MCB_READ_ERROR))
         {
+            ptInst->tConfig.eStatus = eState;
+
             if (ptInst->CfgOverCyclicEvnt != NULL)
             {
                 ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
@@ -775,8 +777,6 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
                 isTransfer = false;
                 ptInst->isCyclic = false;
             }
-
-            ptInst->tConfig.eStatus = eState;
         }
 
         if (isTransfer != false)
