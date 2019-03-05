@@ -254,12 +254,9 @@ static void Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     }
     else
     {
-        if ((ptInst->tIntf.isNewCfgOverCyclic == false) && (ptInst->tIntf.isCfgOverCyclic == false))
-        {
-            pMcbMsg->eStatus = MCB_STANDBY;
-            memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
-            ptInst->tIntf.isNewCfgOverCyclic = true;
-        }
+        pMcbMsg->eStatus = MCB_STANDBY;
+        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->tIntf.isNewCfgOverCyclic = true;
     }
 
     if (pMcbMsg->eStatus == MCB_READ_ERROR)
@@ -283,12 +280,9 @@ static void Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     }
     else
     {
-        if ((ptInst->tIntf.isNewCfgOverCyclic == false) && (ptInst->tIntf.isCfgOverCyclic == false))
-        {
-            pMcbMsg->eStatus = MCB_STANDBY;
-            memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
-            ptInst->tIntf.isNewCfgOverCyclic = true;
-        }
+        pMcbMsg->eStatus = MCB_STANDBY;
+        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->tIntf.isNewCfgOverCyclic = true;
     }
 
     if (pMcbMsg->eStatus == MCB_WRITE_ERROR)
