@@ -120,8 +120,14 @@ struct Mcb_TInst
     Mcb_TIntf tIntf;
     /** Transmission mode */
     Mcb_EMode eMode;
+    /** Callback to read function */
+    void (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    /** Callback to write function */
+    void (*Mcb_Write)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Config transmission Msg */
     Mcb_TMsg tConfig;
+    /** Config message user pointer */
+    Mcb_TMsg* ptUsrConfig;
     /** Cyclic transmission (from MCB master point of view) buffer */
     uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
     /** Cyclic reception (from MCB master point of view) buffer */
@@ -164,32 +170,6 @@ int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcC
  *  Instance to be deinitialized
  */
 void Mcb_Deinit(Mcb_TInst* ptInst);
-
-/**
- * Generic write function
- *
- * @param[in] ptInst
- *  Specifies the target instance
- * @param[in,out] mcbMsg
- *  Request to be send and load with reply
- *
- * @retval Status of the motion control instance
- */
-Mcb_EStatus
-Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
-
-/**
- * Generic read function
- *
- * @param[in] ptInst
- *  Specifies the target instance
- * @param[in,out] mcbMsg
- *  Request to be send and load with reply
- *
- * @retval Status of the motion control instance
- */
-Mcb_EStatus
-Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 
 /**
  * Attach an user callback to the reception event of a config frame over
