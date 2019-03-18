@@ -25,7 +25,7 @@
 #define MCB_MAX_DATA_SZ 128
 
 /** Default timeout for blocking mode */
-#define MCB_DFLT_TIMEOUT 500
+#define MCB_DFLT_TIMEOUT 1000
 
 /** Maximum number of mapped registers simultaneously */
 #define MAX_MAPPED_REG (uint8_t)15U
