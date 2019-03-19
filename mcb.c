@@ -29,6 +29,51 @@
 static void
 Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
+/**
+ * Generic blocking read function
+ *
+ * @param[in] ptInst
+ *  Specifies the target instance
+ * @param[in,out] mcbMsg
+ *  Request to be send and load with reply
+ */
+static void
+Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+
+/**
+ * Generic blocking write function
+ *
+ * @param[in] ptInst
+ *  Specifies the target instance
+ * @param[in,out] mcbMsg
+ *  Request to be send and load with reply
+ */
+static void
+Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+
+/**
+ * Generic non blocking read function
+ *
+ * @param[in] ptInst
+ *  Specifies the target instance
+ * @param[in,out] mcbMsg
+ *  Request to be send and load with reply
+ */
+static void
+Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+
+/**
+ * Generic non blocking write function
+ *
+ * @param[in] ptInst
+ *  Specifies the target instance
+ * @param[in,out] mcbMsg
+ *  Request to be send and load with reply
+ */
+static void
+Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+
+
 int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout)
 {
     int32_t i32Ret = MCB_INIT_OK;
@@ -37,10 +82,14 @@ int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcC
     ptInst->eMode = eMode;
     if (eMode == MCB_BLOCKING)
     {
+        ptInst->Mcb_Read = Mcb_BlockingRead;
+        ptInst->Mcb_Write = Mcb_BlockingWrite;
         ptInst->CfgOverCyclicEvnt = Mcb_ConfigOverCyclicCompl;
     }
     else
     {
+        ptInst->Mcb_Read = Mcb_NonBlockingRead;
+        ptInst->Mcb_Write = Mcb_NonBlockingWrite;
         ptInst->CfgOverCyclicEvnt = NULL;
     }
     ptInst->u32Timeout = u32Timeout;
@@ -77,6 +126,10 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
     ptInst->eMode = MCB_BLOCKING;
     Mcb_IntfDeinit(&ptInst->tIntf);
 
+    ptInst->Mcb_Read = NULL;
+    ptInst->Mcb_Write = NULL;
+    ptInst->CfgOverCyclicEvnt = NULL;
+
     ptInst->tCyclicRxList.u8Mapped = (uint8_t)0;
     ptInst->tCyclicTxList.u8Mapped = (uint8_t)0;
     ptInst->tCyclicRxList.u16MappedSize = (uint16_t)0U;
@@ -91,173 +144,155 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
     }
 }
 
-Mcb_EStatus Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
+static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    pMcbMsg->eStatus = MCB_WRITE_ERROR;
+    uint32_t u32Millis = Mcb_GetMillis();
+    pMcbMsg->u16Cmd = MCB_REQ_READ;
 
     if (ptInst->isCyclic == false)
     {
-        if (ptInst->eMode == MCB_BLOCKING)
+        do
         {
-            uint32_t u32Millis = Mcb_GetMillis();
+            pMcbMsg->eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
+                                            &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
 
-            do
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
-                pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
-                        &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
-
-                if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
-                {
-                    pMcbMsg->eStatus = MCB_WRITE_ERROR;
-                    Mcb_IntfReset(&ptInst->tIntf);
-                    break;
-                }
-
-            } while ((pMcbMsg->eStatus != MCB_WRITE_ERROR) &&
-                    (pMcbMsg->eStatus != MCB_WRITE_SUCCESS));
-        }
-        else
-        {
-            /** Non blocking mode */
-            pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
-                                             &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
-        }
-
-        if (pMcbMsg->eStatus != MCB_WRITE_SUCCESS)
-        {
-            pMcbMsg->u16Cmd |= MCB_REP_ERROR;
-        }
-        else
-        {
-            pMcbMsg->u16Cmd = MCB_REP_ACK;
-        }
+                pMcbMsg->eStatus = MCB_READ_ERROR;
+                Mcb_IntfReset(&ptInst->tIntf);
+                break;
+            }
+        } while((pMcbMsg->eStatus != MCB_READ_ERROR)
+                && (pMcbMsg->eStatus != MCB_READ_SUCCESS));
     }
     else
     {
-        if ((ptInst->tIntf.eState != MCB_READ_REQUEST) && (ptInst->tIntf.eState != MCB_READ_ANSWER) &&
-            (ptInst->tIntf.eState != MCB_WRITE_REQUEST) && (ptInst->tIntf.eState != MCB_WRITE_ANSWER))
+        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->ptUsrConfig = pMcbMsg;
+        ptInst->tIntf.isNewCfgOverCyclic = true;
+
+        do
         {
-            /* Cyclic mode */
-            if (ptInst->eMode == MCB_BLOCKING)
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
-                uint32_t u32Millis = Mcb_GetMillis();
-
-                pMcbMsg->u16Cmd = MCB_REQ_WRITE;
-                pMcbMsg->eStatus = MCB_STANDBY;
-                memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
-                ptInst->tIntf.isNewCfgOverCyclic = true;
-
-                do
-                {
-                    if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
-                    {
-                        pMcbMsg->eStatus = MCB_WRITE_ERROR;
-                        Mcb_IntfReset(&ptInst->tIntf);
-                        break;
-                    }
-                } while ((ptInst->tConfig.eStatus != MCB_WRITE_ERROR) &&
-                         (ptInst->tConfig.eStatus != MCB_WRITE_SUCCESS));
-
-                memcpy(pMcbMsg, &ptInst->tConfig, sizeof(Mcb_TMsg));
+                pMcbMsg->eStatus = MCB_READ_ERROR;
+                Mcb_IntfReset(&ptInst->tIntf);
+                break;
             }
-            else
-            {
-                    pMcbMsg->u16Cmd = MCB_REQ_WRITE;
-                    memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
-                    pMcbMsg->eStatus = MCB_STANDBY;
-                    ptInst->tIntf.isNewCfgOverCyclic = true;
-            }
-        }
-        else
-        {
-            pMcbMsg->eStatus = MCB_WRITE_ERROR;
-        }
+        }while ((ptInst->tIntf.isNewCfgOverCyclic == true)
+                || (ptInst->tIntf.isCfgOverCyclic == true));
     }
 
-    return pMcbMsg->eStatus;
+    if (pMcbMsg->eStatus == MCB_READ_ERROR)
+    {
+        pMcbMsg->u16Cmd |= MCB_REP_ERROR;
+    }
+    else if (pMcbMsg->eStatus == MCB_READ_SUCCESS)
+    {
+        pMcbMsg->u16Cmd = MCB_REP_ACK;
+    }
 }
 
-Mcb_EStatus Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
+static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    pMcbMsg->eStatus = MCB_READ_ERROR;
+    uint32_t u32Millis = Mcb_GetMillis();
+    pMcbMsg->u16Cmd = MCB_REQ_WRITE;
 
     if (ptInst->isCyclic == false)
     {
-        if (ptInst->eMode == MCB_BLOCKING)
+        do
         {
-            uint32_t u32Millis = Mcb_GetMillis();
-            do
+            pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
+                                             &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
+
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
-                pMcbMsg->eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
-                        &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
-
-                if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
-                {
-                    pMcbMsg->eStatus = MCB_READ_ERROR;
-                    Mcb_IntfReset(&ptInst->tIntf);
-                    break;
-                }
-
-            } while ((pMcbMsg->eStatus != MCB_READ_ERROR) &&
-                     (pMcbMsg->eStatus != MCB_READ_SUCCESS));
-
-            pMcbMsg->u16Size = ptInst->tIntf.u16Sz;
-        }
-        else
-        {
-            /** Non blocking mode */
-            pMcbMsg->eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr, &pMcbMsg->u16Data[0],
-                    &pMcbMsg->u16Size);
-        }
-
-        if (pMcbMsg->eStatus == MCB_READ_ERROR)
-        {
-            pMcbMsg->u16Cmd = MCB_REP_READ_ERROR;
-        }
+                pMcbMsg->eStatus = MCB_WRITE_ERROR;
+                Mcb_IntfReset(&ptInst->tIntf);
+                break;
+            }
+        }while ((pMcbMsg->eStatus != MCB_WRITE_ERROR)
+                && (pMcbMsg->eStatus != MCB_WRITE_SUCCESS));
     }
     else
     {
-        if ((ptInst->tIntf.eState != MCB_READ_REQUEST) && (ptInst->tIntf.eState != MCB_READ_ANSWER) &&
-            (ptInst->tIntf.eState != MCB_WRITE_REQUEST) && (ptInst->tIntf.eState != MCB_WRITE_ANSWER))
+        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->ptUsrConfig = pMcbMsg;
+        ptInst->tIntf.isNewCfgOverCyclic = true;
+
+        do
         {
-            /* Cyclic mode */
-            if (ptInst->eMode == MCB_BLOCKING)
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
-                uint32_t u32Millis = Mcb_GetMillis();
-
-                pMcbMsg->u16Cmd = MCB_REQ_READ;
-                pMcbMsg->eStatus = MCB_STANDBY;
-                memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
-                ptInst->tIntf.isNewCfgOverCyclic = true;
-
-                do
-                {
-                    if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
-                    {
-                        pMcbMsg->eStatus = MCB_READ_ERROR;
-                        Mcb_IntfReset(&ptInst->tIntf);
-                        break;
-                    }
-                } while ((ptInst->tConfig.eStatus != MCB_READ_ERROR) &&
-                         (ptInst->tConfig.eStatus != MCB_READ_SUCCESS));
-
-                memcpy(pMcbMsg, &ptInst->tConfig, sizeof(Mcb_TMsg));
+                pMcbMsg->eStatus = MCB_WRITE_ERROR;
+                Mcb_IntfReset(&ptInst->tIntf);
+                break;
             }
-            else
-            {
-                    pMcbMsg->u16Cmd = MCB_REQ_READ;
-                    memcpy(&ptInst->tConfig, pMcbMsg, sizeof(Mcb_TMsg));
-                    pMcbMsg->eStatus = MCB_STANDBY;
-                    ptInst->tIntf.isNewCfgOverCyclic = true;
-            }
-        }
-        else
-        {
-            pMcbMsg->eStatus = MCB_READ_ERROR;
-        }
+        } while((ptInst->tIntf.isNewCfgOverCyclic == true)
+                || (ptInst->tIntf.isCfgOverCyclic == true));
     }
 
-    return pMcbMsg->eStatus;
+    if (pMcbMsg->eStatus == MCB_WRITE_ERROR)
+    {
+        pMcbMsg->u16Cmd |= MCB_REP_ERROR;
+    }
+    else if (pMcbMsg->eStatus == MCB_WRITE_SUCCESS)
+    {
+        pMcbMsg->u16Cmd = MCB_REP_ACK;
+    }
+
+}
+
+static void Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
+{
+    pMcbMsg->u16Cmd = MCB_REQ_READ;
+
+    if (ptInst->isCyclic == false)
+    {
+        pMcbMsg->eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
+                                        &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
+    }
+    else
+    {
+        pMcbMsg->eStatus = MCB_STANDBY;
+        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->tIntf.isNewCfgOverCyclic = true;
+    }
+
+    if (pMcbMsg->eStatus == MCB_READ_ERROR)
+    {
+        pMcbMsg->u16Cmd |= MCB_REP_ERROR;
+    }
+    else if (pMcbMsg->eStatus == MCB_READ_SUCCESS)
+    {
+        pMcbMsg->u16Cmd = MCB_REP_ACK;
+    }
+}
+
+static void Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
+{
+    pMcbMsg->u16Cmd = MCB_REQ_WRITE;
+
+    if (ptInst->isCyclic == false)
+    {
+        pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
+                                         &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
+    }
+    else
+    {
+        pMcbMsg->eStatus = MCB_STANDBY;
+        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        ptInst->tIntf.isNewCfgOverCyclic = true;
+    }
+
+    if (pMcbMsg->eStatus == MCB_WRITE_ERROR)
+    {
+        pMcbMsg->u16Cmd |= MCB_REP_ERROR;
+    }
+    else if (pMcbMsg->eStatus == MCB_WRITE_SUCCESS)
+    {
+        pMcbMsg->u16Cmd = MCB_REP_ACK;
+    }
 }
 
 void Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg))
@@ -276,7 +311,6 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     /** Set up internal struct and verify a proper configuration */
     if (ptInst->tCyclicTxList.u8Mapped < MAX_MAPPED_REG)
     {
-        tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = TX_MAP_BASE + ptInst->tCyclicTxList.u8Mapped + (uint16_t)1U;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
@@ -288,7 +322,7 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
 
         do
         {
-            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+            ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
@@ -296,8 +330,8 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
                 break;
             }
 
-        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-                 (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+                 && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
         switch (tMcbMsg.eStatus)
         {
@@ -326,7 +360,6 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     /** Set up internal struct and verify a proper configuration */
     if (ptInst->tCyclicRxList.u8Mapped < MAX_MAPPED_REG)
     {
-        tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = RX_MAP_BASE + ptInst->tCyclicRxList.u8Mapped + (uint16_t)1U;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
@@ -338,7 +371,7 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
 
         do
         {
-            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+            ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
@@ -346,8 +379,8 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
                 break;
             }
 
-        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-                 (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+                 && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
         switch (tMcbMsg.eStatus)
         {
@@ -374,7 +407,6 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
     uint16_t u16SizeBytes;
 
     /** Set up internal struct and verify a proper configuration */
-    tMcbMsg.eStatus = MCB_STANDBY;
     tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = TX_MAP_BASE + ptInst->tCyclicTxList.u8Mapped + (uint16_t)1U;
     tMcbMsg.u16Cmd = MCB_REQ_WRITE;
@@ -386,7 +418,7 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
 
     do
     {
-        tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+        ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
@@ -394,8 +426,8 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
             break;
         }
 
-    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-             (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+             && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
     switch (tMcbMsg.eStatus)
     {
@@ -421,10 +453,8 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
     uint16_t u16SizeBytes;
 
     /** Set up internal struct and verify a proper configuration */
-    tMcbMsg.eStatus = MCB_STANDBY;
     tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = RX_MAP_BASE + ptInst->tCyclicRxList.u8Mapped + 1;
-    tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_32BIT;
     tMcbMsg.u16Data[0] = (uint16_t)0U;
     tMcbMsg.u16Data[1] = (uint16_t)0U;
@@ -433,7 +463,7 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
 
     do
     {
-        tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+        ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
@@ -441,8 +471,8 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
             break;
         }
 
-    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-             (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+             && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
     switch (tMcbMsg.eStatus)
     {
@@ -467,10 +497,8 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
     Mcb_TMsg tMcbMsg;
 
     /** Set up internal struct and verify a proper configuration */
-    tMcbMsg.eStatus = MCB_STANDBY;
     tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = RX_MAP_BASE;
-    tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_16BIT;
     tMcbMsg.u16Data[0] = (uint16_t)0U;
 
@@ -478,7 +506,7 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
 
     do
     {
-        tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+        ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
@@ -486,8 +514,8 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
             break;
         }
 
-    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-             (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+             && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
     switch (tMcbMsg.eStatus)
     {
@@ -501,10 +529,8 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
     }
 
     /** Set up internal struct and verify a proper configuration */
-    tMcbMsg.eStatus = MCB_STANDBY;
     tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = TX_MAP_BASE;
-    tMcbMsg.u16Cmd = MCB_REQ_WRITE;
     tMcbMsg.u16Size = WORDSIZE_16BIT;
     tMcbMsg.u16Data[0] = (uint16_t)0U;
 
@@ -512,7 +538,7 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
 
     do
     {
-        tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+        ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
@@ -520,8 +546,8 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
             break;
         }
 
-    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-             (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+             && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
     switch (tMcbMsg.eStatus)
     {
@@ -542,10 +568,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
     if (ptInst->isCyclic == false)
     {
-        tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
-        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
         tMcbMsg.u16Data[0] = (uint16_t)ptInst->eSyncMode;
 
@@ -553,7 +577,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
         do
         {
-            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+            ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
@@ -561,8 +585,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                 break;
             }
 
-        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-                 (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+                 && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
         switch (tMcbMsg.eStatus)
         {
@@ -575,10 +599,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         }
 
         /** Check and setup RX mapping */
-        tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = RX_MAP_BASE;
-        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
         tMcbMsg.u16Data[0] = ptInst->tCyclicRxList.u8Mapped;
 
@@ -586,7 +608,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
         do
         {
-            tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+            ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
@@ -594,8 +616,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                 break;
             }
 
-        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-                 (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+                 && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
         switch (tMcbMsg.eStatus)
         {
@@ -610,10 +632,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         if (i32Result == CYCLIC_MODE_OK)
         {
             /** If RX mapping was OK, check and setup TX mapping */
-            tMcbMsg.eStatus = MCB_STANDBY;
             tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
             tMcbMsg.u16Addr = TX_MAP_BASE;
-            tMcbMsg.u16Cmd = MCB_REQ_WRITE;
             tMcbMsg.u16Size = WORDSIZE_16BIT;
             tMcbMsg.u16Data[0] = ptInst->tCyclicTxList.u8Mapped;
 
@@ -621,7 +641,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
             do
             {
-                tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+                ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
                 if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
@@ -629,7 +649,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                     break;
                 }
 
-            } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+            } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+                     && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
             switch (tMcbMsg.eStatus)
             {
@@ -645,10 +666,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         if (i32Result == CYCLIC_MODE_OK)
         {
             /** If both mappings are OK, enable cyclic mode */
-            tMcbMsg.eStatus = MCB_STANDBY;
             tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
             tMcbMsg.u16Addr = ADDR_COMM_STATE;
-            tMcbMsg.u16Cmd = MCB_REQ_WRITE;
             tMcbMsg.u16Size = WORDSIZE_16BIT;
             tMcbMsg.u16Data[0] = (uint16_t)2U;
 
@@ -656,7 +675,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
             do
             {
-                tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
+                ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
                 if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
@@ -664,8 +683,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
                     break;
                 }
 
-            } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR) &&
-                     (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+            } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+                     && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
 
             switch (tMcbMsg.eStatus)
             {
@@ -702,22 +721,19 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
-    Mcb_EStatus  eRes = MCB_WRITE_ERROR;
 
     if (ptInst->isCyclic != false)
     {
-        tMcbMsg.eStatus = MCB_STANDBY;
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = ADDR_COMM_STATE;
-        tMcbMsg.u16Cmd = MCB_REQ_WRITE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
         tMcbMsg.u16Data[0] = (uint16_t)1U;
         /** Cyclic will be disabled through cyclic messages */
-        tMcbMsg.eStatus = Mcb_Write(ptInst, &tMcbMsg);
-        eRes = tMcbMsg.eStatus;
+
+        ptInst->Mcb_Write(ptInst, &tMcbMsg);
     }
 
-    return eRes;
+    return tMcbMsg.eStatus;
 }
 
 void Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
@@ -742,6 +758,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
         if ((eState == MCB_WRITE_SUCCESS) || (eState == MCB_WRITE_ERROR) ||
             (eState == MCB_READ_SUCCESS) || (eState == MCB_READ_ERROR))
         {
+            ptInst->tConfig.eStatus = eState;
+
             if (ptInst->CfgOverCyclicEvnt != NULL)
             {
                 ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
@@ -757,8 +775,6 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
                 ptInst->isCyclic = false;
             }
         }
-
-        ptInst->tConfig.eStatus = eState;
 
         if (isTransfer != false)
         {
@@ -776,10 +792,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
 static void Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 {
-    switch (pMcbMsg->u16Cmd)
+    if ((ptInst->ptUsrConfig != NULL) && (pMcbMsg != NULL))
     {
-        default:
-            /* Nothing */
-            break;
+        memcpy((void*)ptInst->ptUsrConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
     }
 }
