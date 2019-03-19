@@ -179,7 +179,7 @@ static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                 Mcb_IntfReset(&ptInst->tIntf);
                 break;
             }
-        } while((ptInst->tIntf.isNewCfgOverCyclic == true)
+        }while ((ptInst->tIntf.isNewCfgOverCyclic == true)
                 || (ptInst->tIntf.isCfgOverCyclic == true));
     }
 
@@ -211,7 +211,7 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
                 Mcb_IntfReset(&ptInst->tIntf);
                 break;
             }
-        } while((pMcbMsg->eStatus != MCB_WRITE_ERROR)
+        }while ((pMcbMsg->eStatus != MCB_WRITE_ERROR)
                 && (pMcbMsg->eStatus != MCB_WRITE_SUCCESS));
     }
     else
