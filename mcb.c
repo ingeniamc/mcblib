@@ -167,7 +167,8 @@ static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     }
     else
     {
-        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigReq, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigRpy, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
         ptInst->ptUsrConfig = pMcbMsg;
         ptInst->tIntf.isNewCfgOverCyclic = true;
 
@@ -216,7 +217,8 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
     }
     else
     {
-        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigReq, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigRpy, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
         ptInst->ptUsrConfig = pMcbMsg;
         ptInst->tIntf.isNewCfgOverCyclic = true;
 
@@ -256,7 +258,8 @@ static void Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
              && (ptInst->tIntf.isCfgOverCyclic == false))
     {
         pMcbMsg->eStatus = MCB_STANDBY;
-        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigReq, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigRpy, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
         ptInst->tIntf.isNewCfgOverCyclic = true;
     }
 
@@ -283,7 +286,8 @@ static void Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
              && (ptInst->tIntf.isCfgOverCyclic == false))
     {
         pMcbMsg->eStatus = MCB_STANDBY;
-        memcpy((void*)&ptInst->tConfig, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigReq, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigRpy, (const void*)pMcbMsg, sizeof(Mcb_TMsg));
         ptInst->tIntf.isNewCfgOverCyclic = true;
     }
 
@@ -726,13 +730,21 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 
     if (ptInst->isCyclic != false)
     {
-        tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
-        tMcbMsg.u16Addr = ADDR_COMM_STATE;
-        tMcbMsg.u16Size = WORDSIZE_16BIT;
-        tMcbMsg.u16Data[0] = (uint16_t)1U;
-        /** Cyclic will be disabled through cyclic messages */
+        if ((ptInst->tIntf.isCfgOverCyclic == false)
+            && (ptInst->tIntf.isNewCfgOverCyclic == false))
+        {
+            tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
+            tMcbMsg.u16Addr = ADDR_COMM_STATE;
+            tMcbMsg.u16Size = WORDSIZE_16BIT;
+            tMcbMsg.u16Data[0] = (uint16_t)1U;
+            /** Cyclic will be disabled through cyclic messages */
 
-        ptInst->Mcb_Write(ptInst, &tMcbMsg);
+            ptInst->Mcb_Write(ptInst, &tMcbMsg);
+        }
+        else
+        {
+            tMcbMsg.eStatus = MCB_STANDBY;
+        }
     }
 
     return tMcbMsg.eStatus;
@@ -753,25 +765,25 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
     {
         isTransfer = true;
 
-        eState = Mcb_IntfCfgOverCyclic(&ptInst->tIntf, ptInst->tConfig.u16Node, ptInst->tConfig.u16Addr,
-                                       &ptInst->tConfig.u16Cmd, ptInst->tConfig.u16Data, &ptInst->tConfig.u16Size,
+        eState = Mcb_IntfCfgOverCyclic(&ptInst->tIntf, ptInst->tConfigRpy.u16Node, ptInst->tConfigRpy.u16Addr,
+                                       &ptInst->tConfigRpy.u16Cmd, ptInst->tConfigRpy.u16Data, &ptInst->tConfigRpy.u16Size,
                                        &isCfgData);
 
         if ((eState == MCB_WRITE_SUCCESS) || (eState == MCB_WRITE_ERROR) ||
             (eState == MCB_READ_SUCCESS) || (eState == MCB_READ_ERROR))
         {
-            ptInst->tConfig.eStatus = eState;
+            ptInst->tConfigRpy.eStatus = eState;
 
             if (ptInst->CfgOverCyclicEvnt != NULL)
             {
-                ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfig);
+                ptInst->CfgOverCyclicEvnt(ptInst, &ptInst->tConfigRpy);
             }
 
             /* If the communication state has been written succesfully with the stop command,
              * set the interface as non-cyclic */
-            if ((ptInst->tConfig.u16Addr == ADDR_COMM_STATE) &&
+            if ((ptInst->tConfigReq.u16Addr == ADDR_COMM_STATE) &&
                 (eState == MCB_WRITE_SUCCESS) &&
-                (ptInst->tConfig.u16Data[0] == (uint16_t)1U))
+                (ptInst->tConfigReq.u16Data[0] == (uint16_t)1U))
             {
                 isTransfer = false;
                 ptInst->isCyclic = false;
