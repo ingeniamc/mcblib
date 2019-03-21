@@ -25,7 +25,7 @@
 #define MCB_MAX_DATA_SZ 128
 
 /** Default timeout for blocking mode */
-#define MCB_DFLT_TIMEOUT 500
+#define MCB_DFLT_TIMEOUT (uint32_t)1000UL
 
 /** Maximum number of mapped registers simultaneously */
 #define MAX_MAPPED_REG (uint8_t)15U
@@ -120,8 +120,16 @@ struct Mcb_TInst
     Mcb_TIntf tIntf;
     /** Transmission mode */
     Mcb_EMode eMode;
-    /** Config transmission Msg */
-    Mcb_TMsg tConfig;
+    /** Callback to read function */
+    void (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    /** Callback to write function */
+    void (*Mcb_Write)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+    /** Config transmission Msg request */
+    Mcb_TMsg tConfigReq;
+    /** Config transmission Msg reply */
+    Mcb_TMsg tConfigRpy;
+    /** Config message user pointer */
+    Mcb_TMsg* ptUsrConfig;
     /** Cyclic transmission (from MCB master point of view) buffer */
     uint16_t u16CyclicTx[MCB_FRM_MAX_CYCLIC_SZ];
     /** Cyclic reception (from MCB master point of view) buffer */
@@ -164,32 +172,6 @@ int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcC
  *  Instance to be deinitialized
  */
 void Mcb_Deinit(Mcb_TInst* ptInst);
-
-/**
- * Generic write function
- *
- * @param[in] ptInst
- *  Specifies the target instance
- * @param[in,out] mcbMsg
- *  Request to be send and load with reply
- *
- * @retval Status of the motion control instance
- */
-Mcb_EStatus
-Mcb_Write(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
-
-/**
- * Generic read function
- *
- * @param[in] ptInst
- *  Specifies the target instance
- * @param[in,out] mcbMsg
- *  Request to be send and load with reply
- *
- * @retval Status of the motion control instance
- */
-Mcb_EStatus
-Mcb_Read(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
 
 /**
  * Attach an user callback to the reception event of a config frame over
