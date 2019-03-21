@@ -124,8 +124,10 @@ struct Mcb_TInst
     void (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Callback to write function */
     void (*Mcb_Write)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
-    /** Config transmission Msg */
-    Mcb_TMsg tConfig;
+    /** Config transmission Msg request */
+    Mcb_TMsg tConfigReq;
+    /** Config transmission Msg reply */
+    Mcb_TMsg tConfigRpy;
     /** Config message user pointer */
     Mcb_TMsg* ptUsrConfig;
     /** Cyclic transmission (from MCB master point of view) buffer */
