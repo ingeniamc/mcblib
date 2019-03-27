@@ -40,6 +40,8 @@
 
 /** Ingenia protocol config function requests/replies */
 /** Read request */
+#define MCB_REQ_GETINFO         0U
+/** Read request */
 #define MCB_REQ_READ            1U
 /** Write request */
 #define MCB_REQ_WRITE           2U
@@ -48,6 +50,8 @@
 
 /** Acknowledge */
 #define MCB_REP_ACK             3U
+/** Error detected during read */
+#define MCB_REP_GETINFO_ERROR   4U
 /** Error detected during read */
 #define MCB_REP_READ_ERROR      5U
 /** Error detected during write */
@@ -60,6 +64,11 @@
 #define MCB_FRM_NOTSEG          0U
 /** Bit value for segmented frames */
 #define MCB_FRM_SEG             1U
+
+/** Get info cyclic Tx */
+#define CYCLIC_TX (uint8_t)1
+/** Get info cyclic Rx */
+#define CYCLIC_RX (uint8_t)2
 
 /** High speed Ingenia protocol frame */
 typedef struct {

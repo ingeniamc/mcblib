@@ -52,6 +52,9 @@
 /** Wrong initialization of the MCB interface */
 #define MCB_INIT_KO (int32_t)-1L
 
+#define CYCLIC_TX (uint8_t)1
+#define CYCLIC_RX (uint8_t)2
+
 /** Motion control bus mode of operation */
 typedef enum
 {
@@ -91,6 +94,37 @@ typedef struct
     Mcb_EStatus eStatus;
 } Mcb_TMsg;
 
+typedef struct Mcb_TInfoData
+{
+    unsigned int u8Size : 8;
+    unsigned int u8DataType : 7;
+    unsigned int u8CyclicType : 2;
+    unsigned int u8AccessType : 3;
+} Mcb_TInfoData;
+
+typedef union Mcb_TInfoMsgData
+{
+    /** Static data */
+    uint16_t u16Data[MCB_MAX_DATA_SZ];
+    Mcb_TInfoData tInfoData;
+} Mcb_TInfoMsgData;
+
+/** Info frame data struct */
+typedef struct
+{
+    /** Destination / source node */
+    uint16_t u16Node;
+    /** Target register address */
+    uint16_t u16Addr;
+    /** Master / slave command */
+    uint16_t u16Cmd;
+    /** Message total size (words) */
+    uint16_t u16Size;
+    Mcb_TInfoMsgData tInfoMsgData;
+    /** Message status */
+    Mcb_EStatus eStatus;
+} Mcb_TInfoMsg;
+
 /** List struct to store mapped registers */
 typedef struct
 {
@@ -120,6 +154,8 @@ struct Mcb_TInst
     Mcb_TIntf tIntf;
     /** Transmission mode */
     Mcb_EMode eMode;
+    /** Callback to getinfo function */
+    void (*Mcb_GetInfo)(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg);
     /** Callback to read function */
     void (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Callback to write function */
