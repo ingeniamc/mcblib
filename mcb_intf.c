@@ -573,7 +573,7 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
         (ptInst->eState != MCB_GETINFO_REQUEST) && (ptInst->eState != MCB_GETINFO_ANSWER))
     {
         ptInst->u16Sz = *pu16Sz;
-        ptInst->eState = MCB_GETINFO_REQUEST;
+        ptInst->eState = MCB_WRITE_REQUEST;
     }
 
     switch (ptInst->eState)
