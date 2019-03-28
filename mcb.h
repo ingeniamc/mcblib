@@ -52,9 +52,6 @@
 /** Wrong initialization of the MCB interface */
 #define MCB_INIT_KO (int32_t)-1L
 
-#define CYCLIC_TX (uint8_t)1
-#define CYCLIC_RX (uint8_t)2
-
 /** Motion control bus mode of operation */
 typedef enum
 {
@@ -97,7 +94,7 @@ typedef struct
 typedef struct Mcb_TInfoData
 {
     unsigned int u8Size : 8;
-    unsigned int u8DataType : 7;
+    unsigned int u8DataType : 6;
     unsigned int u8CyclicType : 2;
     unsigned int u8AccessType : 3;
 } Mcb_TInfoData;

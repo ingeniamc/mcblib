@@ -70,6 +70,19 @@
 /** Get info cyclic Rx */
 #define CYCLIC_RX (uint8_t)2
 
+/** Get info int16 type */
+#define INT16_TYPE          (uint16_t)0
+/** Get info uint16 type */
+#define UINT16_TYPE         (uint16_t)1
+/** Get info int32 type */
+#define INT32_TYPE          (uint16_t)2
+/** Get info uint32 type */
+#define UINT32_TYPE         (uint16_t)3
+/** Get info float type */
+#define FLOAT_TYPE          (uint16_t)4
+/** Get info int16 type */
+#define STRING_TYPE         (uint16_t)5
+
 /** High speed Ingenia protocol frame */
 typedef struct {
 	/** Data buffer */
