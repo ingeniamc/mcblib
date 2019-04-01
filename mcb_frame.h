@@ -19,8 +19,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/** Motion control frame maximum buffer size */
-#define MCB_FRM_MAX_DATA_SZ     38U
+/** Maximum data size of the buffers */
+#define MCB_MAX_DATA_SZ 128
 
 /** Motion control frame config buffer header size (words) */
 #define MCB_FRM_HEAD_SZ         1U
@@ -83,10 +83,32 @@
 /** Get info int16 type */
 #define STRING_TYPE         (uint16_t)5
 
+/** Get info struct */
+typedef struct Mcb_TInfoData
+{
+    /** Register size in bytes */
+    unsigned int u8Size         : 8;
+    /** Register type info */
+    unsigned int u8DataType     : 6;
+    /** Register type of cyclic info */
+    unsigned int u8CyclicType   : 2;
+    /** Register access type info */
+    unsigned int u8AccessType   : 3;
+} Mcb_TInfoData;
+
+/** Get info config data struct */
+typedef union Mcb_TInfoMsgData
+{
+    /** Static data */
+    uint16_t u16Data[MCB_MAX_DATA_SZ];
+    /** Get info command structure */
+    Mcb_TInfoData tInfoData;
+} Mcb_TInfoMsgData;
+
 /** High speed Ingenia protocol frame */
 typedef struct {
 	/** Data buffer */
-	uint16_t u16Buf[MCB_FRM_MAX_DATA_SZ];
+	uint16_t u16Buf[MCB_MAX_DATA_SZ];
     /** Frame size */
 	uint16_t u16Sz;
 } Mcb_TFrame;

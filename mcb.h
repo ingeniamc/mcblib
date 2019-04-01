@@ -21,9 +21,6 @@
 
 #include "mcb_intf.h"
 
-/** Maximum data size of the buffers */
-#define MCB_MAX_DATA_SZ 128
-
 /** Default timeout for blocking mode */
 #define MCB_DFLT_TIMEOUT (uint32_t)1000UL
 
@@ -90,21 +87,6 @@ typedef struct
     /** Message status */
     Mcb_EStatus eStatus;
 } Mcb_TMsg;
-
-typedef struct Mcb_TInfoData
-{
-    unsigned int u8Size : 8;
-    unsigned int u8DataType : 6;
-    unsigned int u8CyclicType : 2;
-    unsigned int u8AccessType : 3;
-} Mcb_TInfoData;
-
-typedef union Mcb_TInfoMsgData
-{
-    /** Static data */
-    uint16_t u16Data[MCB_MAX_DATA_SZ];
-    Mcb_TInfoData tInfoData;
-} Mcb_TInfoMsgData;
 
 /** Info frame data struct */
 typedef struct
