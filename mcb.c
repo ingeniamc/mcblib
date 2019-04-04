@@ -34,7 +34,7 @@ Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbInfoMsg
  *  Request to be send and load with reply
  */
 static void
@@ -45,29 +45,29 @@ Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg);
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 /**
  * Generic blocking write function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 /**
  * Generic non blocking getinfo function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbInfoMsg
  *  Request to be send and load with reply
  */
 static void
@@ -78,22 +78,22 @@ Mcb_NonBlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg);
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 /**
  * Generic non blocking write function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 
 int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout)
@@ -179,7 +179,7 @@ static void Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
         do
         {
             pMcbInfoMsg->eStatus = Mcb_IntfGetInfo(&ptInst->tIntf, pMcbInfoMsg->u16Node, pMcbInfoMsg->u16Addr,
-                                              (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
+                                                   (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
 
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {

@@ -145,6 +145,7 @@ Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uin
  */
 void
 Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewData);
+
 #endif /* MCB_INTF_H */
 
 /** @} */
