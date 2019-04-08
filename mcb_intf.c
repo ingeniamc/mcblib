@@ -13,24 +13,130 @@
 #define DFLT_TIMEOUT  100
 #define SIZE_WORDS    2
 
+/**
+ * Execute a Spi transfer
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] tInFrame
+ *  Input frame
+ * @param[out] tOutFrame
+ *  Output frame
+ */
 static void
 Mcb_IntfTransfer(const Mcb_TIntf* ptInst, Mcb_TFrame* tInFrame, Mcb_TFrame* tOutFrame);
 
+/**
+ * Process a write command
+ *
+ * @note Mcb in non cyclic status
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Addr
+ *  Register address
+ * @param[in] pu16Data
+ *  Data to be read
+ * @param[out] pu16Sz
+ *  Size of read words
+ *
+ * @retval If a new transfer is ready
+ */
 static bool
 Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+/**
+ * Process a read command
+ *
+ * @note Mcb in non cyclic status
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Addr
+ *  Register address
+ * @param[out] pu16Data
+ *  Data to be write
+ * @param[in] pu16Sz
+ *  Size of read words
+ *
+ * @retval If a new transfer is ready
+ */
 static bool
 Mcb_IntfReadCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+/**
+ * Process a get info command
+ *
+ * @note Mcb in non cyclic status
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Addr
+ *  Register address
+ * @param[out] pu16Data
+ *  Data to be read
+ * @param[in] pu16Sz
+ *  Size of read words
+ *
+ * @retval If a new transfer is ready
+ */
 static bool
 Mcb_IntfGetInfoCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+/**
+ * Process a write command
+ *
+ * @note Mcb in cyclic status
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Addr
+ *  Register address
+ * @param[in] pu16Data
+ *  Data to be read
+ * @param[out] pu16Sz
+ *  Size of read words
+ *
+ * @retval If a new transfer is ready
+ */
 static bool
 Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+/**
+ * Process a read command
+ *
+ * @note Mcb in non cyclic status
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Addr
+ *  Register address
+ * @param[out] pu16Data
+ *  Data to be write
+ * @param[in] pu16Sz
+ *  Size of read words
+ *
+ * @retval If a new transfer is ready
+ */
 static bool
 Mcb_IntfReadCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
+/**
+ * Process a get info command
+ *
+ * @note Mcb non cyclic status
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Addr
+ *  Register address
+ * @param[out] pu16Data
+ *  Data to be read
+ * @param[in] pu16Sz
+ *  Size of read words
+ *
+ * @retval If a new transfer is ready
+ */
 static bool
 Mcb_IntfGetInfoCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 

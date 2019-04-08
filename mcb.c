@@ -187,7 +187,7 @@ static void Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
                 Mcb_IntfReset(&ptInst->tIntf);
                 break;
             }
-        } while((pMcbInfoMsg->eStatus != MCB_GETINFO_ERROR)
+        } while ((pMcbInfoMsg->eStatus != MCB_GETINFO_ERROR)
                 && (pMcbInfoMsg->eStatus != MCB_GETINFO_SUCCESS));
     }
     else
@@ -205,7 +205,7 @@ static void Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
                 Mcb_IntfReset(&ptInst->tIntf);
                 break;
             }
-        }while ((ptInst->tIntf.isNewCfgOverCyclic == true)
+        } while ((ptInst->tIntf.isNewCfgOverCyclic == true)
                 || (ptInst->tIntf.isCfgOverCyclic == true));
     }
 
@@ -327,7 +327,7 @@ static void Mcb_NonBlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
     if (ptInst->isCyclic == false)
     {
         pMcbInfoMsg->eStatus = Mcb_IntfGetInfo(&ptInst->tIntf, pMcbInfoMsg->u16Node, pMcbInfoMsg->u16Addr,
-                                        (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
+                                               (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
     }
     else
     {
