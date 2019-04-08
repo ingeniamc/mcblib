@@ -19,8 +19,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/** Motion control frame maximum buffer size */
-#define MCB_FRM_MAX_DATA_SZ     38U
+/** Maximum data size of the buffers */
+#define MCB_MAX_DATA_SZ 128
 
 /** Motion control frame config buffer header size (words) */
 #define MCB_FRM_HEAD_SZ         1U
@@ -40,6 +40,8 @@
 
 /** Ingenia protocol config function requests/replies */
 /** Read request */
+#define MCB_REQ_GETINFO         0U
+/** Read request */
 #define MCB_REQ_READ            1U
 /** Write request */
 #define MCB_REQ_WRITE           2U
@@ -48,6 +50,8 @@
 
 /** Acknowledge */
 #define MCB_REP_ACK             3U
+/** Error detected during read */
+#define MCB_REP_GETINFO_ERROR   4U
 /** Error detected during read */
 #define MCB_REP_READ_ERROR      5U
 /** Error detected during write */
@@ -61,10 +65,50 @@
 /** Bit value for segmented frames */
 #define MCB_FRM_SEG             1U
 
+/** Get info cyclic Tx */
+#define CYCLIC_TX (uint8_t)1
+/** Get info cyclic Rx */
+#define CYCLIC_RX (uint8_t)2
+
+/** Get info int16 type */
+#define INT16_TYPE          (uint16_t)0U
+/** Get info uint16 type */
+#define UINT16_TYPE         (uint16_t)1U
+/** Get info int32 type */
+#define INT32_TYPE          (uint16_t)2U
+/** Get info uint32 type */
+#define UINT32_TYPE         (uint16_t)3U
+/** Get info float type */
+#define FLOAT_TYPE          (uint16_t)4U
+/** Get info int16 type */
+#define STRING_TYPE         (uint16_t)5U
+
+/** Get info struct */
+typedef struct Mcb_TInfoData
+{
+    /** Register size in bytes */
+    unsigned int u8Size         : 8;
+    /** Register type info */
+    unsigned int u8DataType     : 6;
+    /** Register type of cyclic info */
+    unsigned int u8CyclicType   : 2;
+    /** Register access type info */
+    unsigned int u8AccessType   : 3;
+} Mcb_TInfoData;
+
+/** Get info config data struct */
+typedef union Mcb_TInfoMsgData
+{
+    /** Static data */
+    uint16_t u16Data[MCB_MAX_DATA_SZ];
+    /** Get info command structure */
+    Mcb_TInfoData tInfoData;
+} Mcb_TInfoMsgData;
+
 /** High speed Ingenia protocol frame */
 typedef struct {
 	/** Data buffer */
-	uint16_t u16Buf[MCB_FRM_MAX_DATA_SZ];
+	uint16_t u16Buf[MCB_MAX_DATA_SZ];
     /** Frame size */
 	uint16_t u16Sz;
 } Mcb_TFrame;

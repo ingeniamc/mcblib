@@ -85,6 +85,25 @@ Mcb_EStatus
 Mcb_IntfRead(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
 
 /**
+ * Execute a complete config getinfo sequence through MCB
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[in] u16Node
+ *  Target slave
+ * @param[in] u16Addr
+ *  Register address to be read
+ * @param[out] pu16Data
+ *  Data to be read
+ * @param[out] pu16Sz
+ *  Size of read words
+ *
+ * @retval Mcb_EStatus
+ */
+Mcb_EStatus
+Mcb_IntfGetInfo(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uint16_t* pu16Data, uint16_t* pu16Sz);
+
+/**
  * Process config data inside cyclic frames
  *
  * @param[in] ptInst
@@ -126,6 +145,7 @@ Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uin
  */
 void
 Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewData);
+
 #endif /* MCB_INTF_H */
 
 /** @} */
