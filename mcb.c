@@ -827,6 +827,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
+    tMcbMsg.eStatus = MCB_STANDBY;
 
     if (ptInst->isCyclic != false)
     {
