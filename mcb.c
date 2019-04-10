@@ -30,48 +30,70 @@ static void
 Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 /**
+ * Generic blocking getinfo function
+ *
+ * @param[in] ptInst
+ *  Specifies the target instance
+ * @param[in,out] pMcbInfoMsg
+ *  Request to be send and load with reply
+ */
+static void
+Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg);
+
+/**
  * Generic blocking read function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 /**
  * Generic blocking write function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
+
+/**
+ * Generic non blocking getinfo function
+ *
+ * @param[in] ptInst
+ *  Specifies the target instance
+ * @param[in,out] pMcbInfoMsg
+ *  Request to be send and load with reply
+ */
+static void
+Mcb_NonBlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg);
 
 /**
  * Generic non blocking read function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 /**
  * Generic non blocking write function
  *
  * @param[in] ptInst
  *  Specifies the target instance
- * @param[in,out] mcbMsg
+ * @param[in,out] pMcbMsg
  *  Request to be send and load with reply
  */
 static void
-Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* mcbMsg);
+Mcb_NonBlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
 
 
 int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcCrc, uint32_t u32Timeout)
@@ -82,12 +104,14 @@ int32_t Mcb_Init(Mcb_TInst* ptInst, Mcb_EMode eMode, uint16_t u16Id, bool bCalcC
     ptInst->eMode = eMode;
     if (eMode == MCB_BLOCKING)
     {
+        ptInst->Mcb_GetInfo = Mcb_BlockingGetInfo;
         ptInst->Mcb_Read = Mcb_BlockingRead;
         ptInst->Mcb_Write = Mcb_BlockingWrite;
         ptInst->CfgOverCyclicEvnt = Mcb_ConfigOverCyclicCompl;
     }
     else
     {
+        ptInst->Mcb_GetInfo = Mcb_NonBlockingGetInfo;
         ptInst->Mcb_Read = Mcb_NonBlockingRead;
         ptInst->Mcb_Write = Mcb_NonBlockingWrite;
         ptInst->CfgOverCyclicEvnt = NULL;
@@ -126,6 +150,7 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
     ptInst->eMode = MCB_BLOCKING;
     Mcb_IntfDeinit(&ptInst->tIntf);
 
+    ptInst->Mcb_GetInfo = NULL;
     ptInst->Mcb_Read = NULL;
     ptInst->Mcb_Write = NULL;
     ptInst->CfgOverCyclicEvnt = NULL;
@@ -141,6 +166,56 @@ void Mcb_Deinit(Mcb_TInst* ptInst)
         ptInst->tCyclicRxList.u16Sz[u8Idx] = (uint16_t)0U;
         ptInst->tCyclicTxList.u16Addr[u8Idx] = (uint16_t)0U;
         ptInst->tCyclicTxList.u16Sz[u8Idx] = (uint16_t)0U;
+    }
+}
+
+static void Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
+{
+    uint32_t u32Millis = Mcb_GetMillis();
+    pMcbInfoMsg->u16Cmd = MCB_REQ_GETINFO;
+
+    if (ptInst->isCyclic == false)
+    {
+        do
+        {
+            pMcbInfoMsg->eStatus = Mcb_IntfGetInfo(&ptInst->tIntf, pMcbInfoMsg->u16Node, pMcbInfoMsg->u16Addr,
+                                                   (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
+
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+            {
+                pMcbInfoMsg->eStatus = MCB_GETINFO_ERROR;
+                Mcb_IntfReset(&ptInst->tIntf);
+                break;
+            }
+        } while ((pMcbInfoMsg->eStatus != MCB_GETINFO_ERROR)
+                && (pMcbInfoMsg->eStatus != MCB_GETINFO_SUCCESS));
+    }
+    else
+    {
+        memcpy((void*)&ptInst->tConfigReq, (const void*)pMcbInfoMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigRpy, (const void*)pMcbInfoMsg, sizeof(Mcb_TMsg));
+        ptInst->ptUsrConfig = (Mcb_TMsg*)pMcbInfoMsg;
+        ptInst->tIntf.isNewCfgOverCyclic = true;
+
+        do
+        {
+            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+            {
+                pMcbInfoMsg->eStatus = MCB_GETINFO_ERROR;
+                Mcb_IntfReset(&ptInst->tIntf);
+                break;
+            }
+        } while ((ptInst->tIntf.isNewCfgOverCyclic == true)
+                || (ptInst->tIntf.isCfgOverCyclic == true));
+    }
+
+    if (pMcbInfoMsg->eStatus == MCB_GETINFO_ERROR)
+    {
+        pMcbInfoMsg->u16Cmd |= MCB_REP_ERROR;
+    }
+    else if (pMcbInfoMsg->eStatus == MCB_GETINFO_SUCCESS)
+    {
+        pMcbInfoMsg->u16Cmd = MCB_REP_ACK;
     }
 }
 
@@ -243,6 +318,33 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
         pMcbMsg->u16Cmd = MCB_REP_ACK;
     }
 
+}
+
+static void Mcb_NonBlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
+{
+    pMcbInfoMsg->u16Cmd = MCB_REQ_GETINFO;
+
+    if (ptInst->isCyclic == false)
+    {
+        pMcbInfoMsg->eStatus = Mcb_IntfGetInfo(&ptInst->tIntf, pMcbInfoMsg->u16Node, pMcbInfoMsg->u16Addr,
+                                               (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
+    }
+    else
+    {
+        pMcbInfoMsg->eStatus = MCB_STANDBY;
+        memcpy((void*)&ptInst->tConfigReq, (const void*)pMcbInfoMsg, sizeof(Mcb_TMsg));
+        memcpy((void*)&ptInst->tConfigRpy, (const void*)pMcbInfoMsg, sizeof(Mcb_TMsg));
+        ptInst->tIntf.isNewCfgOverCyclic = true;
+    }
+
+    if (pMcbInfoMsg->eStatus == MCB_GETINFO_ERROR)
+    {
+        pMcbInfoMsg->u16Cmd |= MCB_REP_ERROR;
+    }
+    else if (pMcbInfoMsg->eStatus == MCB_GETINFO_SUCCESS)
+    {
+        pMcbInfoMsg->u16Cmd = MCB_REP_ACK;
+    }
 }
 
 static void Mcb_NonBlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
@@ -725,6 +827,7 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 {
     Mcb_TMsg tMcbMsg;
+    tMcbMsg.eStatus = MCB_STANDBY;
 
     if (ptInst->isCyclic != false)
     {
@@ -768,7 +871,8 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
                                        &isCfgData);
 
         if ((eState == MCB_WRITE_SUCCESS) || (eState == MCB_WRITE_ERROR) ||
-            (eState == MCB_READ_SUCCESS) || (eState == MCB_READ_ERROR))
+            (eState == MCB_READ_SUCCESS) || (eState == MCB_READ_ERROR) ||
+            (eState == MCB_GETINFO_SUCCESS) || (eState == MCB_GETINFO_ERROR))
         {
             ptInst->tConfigRpy.eStatus = eState;
 

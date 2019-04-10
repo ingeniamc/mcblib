@@ -21,9 +21,6 @@
 
 #include "mcb_intf.h"
 
-/** Maximum data size of the buffers */
-#define MCB_MAX_DATA_SZ 128
-
 /** Default timeout for blocking mode */
 #define MCB_DFLT_TIMEOUT (uint32_t)1000UL
 
@@ -91,6 +88,22 @@ typedef struct
     Mcb_EStatus eStatus;
 } Mcb_TMsg;
 
+/** Info frame data struct */
+typedef struct
+{
+    /** Destination / source node */
+    uint16_t u16Node;
+    /** Target register address */
+    uint16_t u16Addr;
+    /** Master / slave command */
+    uint16_t u16Cmd;
+    /** Message total size (words) */
+    uint16_t u16Size;
+    Mcb_TInfoMsgData tInfoMsgData;
+    /** Message status */
+    Mcb_EStatus eStatus;
+} Mcb_TInfoMsg;
+
 /** List struct to store mapped registers */
 typedef struct
 {
@@ -120,6 +133,8 @@ struct Mcb_TInst
     Mcb_TIntf tIntf;
     /** Transmission mode */
     Mcb_EMode eMode;
+    /** Callback to getinfo function */
+    void (*Mcb_GetInfo)(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg);
     /** Callback to read function */
     void (*Mcb_Read)(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg);
     /** Callback to write function */

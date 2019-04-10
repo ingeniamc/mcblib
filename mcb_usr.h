@@ -43,6 +43,8 @@ typedef enum
     MCB_WRITE_SUCCESS = 0,
     /** Read request success */
     MCB_READ_SUCCESS,
+    /** Get info success */
+    MCB_GETINFO_SUCCESS,
     /** Bus in stand by */
     MCB_STANDBY,
     /** Sending a write request */
@@ -53,10 +55,16 @@ typedef enum
     MCB_READ_REQUEST,
     /** Processing answer from read request */
     MCB_READ_ANSWER,
+    /** Sending a get info request */
+    MCB_GETINFO_REQUEST,
+    /** Processing answer from get info request */
+    MCB_GETINFO_ANSWER,
     /** Write config request error */
     MCB_WRITE_ERROR,
     /** Read config request error */
     MCB_READ_ERROR,
+    /** Get info config request error */
+    MCB_GETINFO_ERROR,
 } Mcb_EStatus;
 
 /** Motion control communication interface instance */
