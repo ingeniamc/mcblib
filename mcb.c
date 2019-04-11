@@ -847,6 +847,10 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
             tMcbMsg.eStatus = MCB_STANDBY;
         }
     }
+    else
+    {
+        tMcbMsg.eStatus = MCB_WRITE_SUCCESS;
+    }
 
     return tMcbMsg.eStatus;
 }
