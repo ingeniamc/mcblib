@@ -305,6 +305,17 @@ Mcb_EStatus
 Mcb_DisableCyclic(Mcb_TInst* ptInst);
 
 /**
+ * Get cyclic mode.
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ *
+ * @retval Current cyclic mode.
+ */
+Mcb_ECyclicMode
+Mcb_GetCyclicMode(Mcb_TInst* ptInst);
+
+/**
  * Sets the desired cyclic mode.
  *
  * @note Blocking function, while the config is written into driver.
@@ -312,8 +323,10 @@ Mcb_DisableCyclic(Mcb_TInst* ptInst);
  * @param[in] ptInst
  *  Mcb instance
  * @param[in] eNewCycMode Desired cyclic mode.
+ *
+ * @retval Current cyclic mode.
  */
-void
+Mcb_ECyclicMode
 Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
 
 /**

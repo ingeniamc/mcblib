@@ -674,43 +674,13 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
 
     if (ptInst->isCyclic == false)
     {
-        tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
-        tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
-        tMcbMsg.u16Size = WORDSIZE_16BIT;
-        tMcbMsg.u16Data[0] = (uint16_t)ptInst->eSyncMode;
-
         uint32_t u32Millis = Mcb_GetMillis();
-
-        do
-        {
-            ptInst->Mcb_Write(ptInst, &tMcbMsg);
-
-            if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
-            {
-                tMcbMsg.eStatus = MCB_WRITE_ERROR;
-                break;
-            }
-
-        } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
-                 && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
-
-        switch (tMcbMsg.eStatus)
-        {
-            case MCB_WRITE_SUCCESS:
-                /** Do nothing */
-                break;
-            default:
-                i32Result = CYCLIC_ERR_SYNC;
-                break;
-        }
 
         /** Check and setup RX mapping */
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = RX_MAP_BASE;
         tMcbMsg.u16Size = WORDSIZE_16BIT;
         tMcbMsg.u16Data[0] = ptInst->tCyclicRxList.u8Mapped;
-
-        u32Millis = Mcb_GetMillis();
 
         do
         {
@@ -855,9 +825,45 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
     return tMcbMsg.eStatus;
 }
 
-void Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
+Mcb_ECyclicMode Mcb_GetCyclicMode(Mcb_TInst* ptInst)
 {
-    ptInst->eSyncMode = eNewCycMode;
+    return ptInst->eSyncMode;
+}
+
+Mcb_ECyclicMode Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode)
+{
+    Mcb_TMsg tMcbMsg;
+    uint32_t u32Millis = Mcb_GetMillis();
+
+    tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
+    tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
+    tMcbMsg.u16Size = WORDSIZE_16BIT;
+    tMcbMsg.u16Data[0] = (uint16_t)ptInst->eSyncMode;
+
+    do
+    {
+        ptInst->Mcb_Write(ptInst, &tMcbMsg);
+
+        if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+        {
+            tMcbMsg.eStatus = MCB_WRITE_ERROR;
+            break;
+        }
+
+    } while ((tMcbMsg.eStatus != MCB_WRITE_ERROR)
+             && (tMcbMsg.eStatus != MCB_WRITE_SUCCESS));
+
+    switch (tMcbMsg.eStatus)
+    {
+        case MCB_WRITE_SUCCESS:
+            ptInst->eSyncMode = eNewCycMode;
+            break;
+        default:
+            /** Do nothing */
+            break;
+    }
+
+    return ptInst->eSyncMode;
 }
 
 bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
