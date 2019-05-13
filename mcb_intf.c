@@ -449,7 +449,7 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
             {
                 case MCB_REP_ACK:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
+                    Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[(uint16_t)0U]);
 
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
@@ -459,7 +459,6 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                         }
                         else
                         {
-                            ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
                             ptInst->eState = MCB_WRITE_SUCCESS;
                         }
                     }
@@ -470,11 +469,10 @@ static bool Mcb_IntfWriteCfg(Mcb_TIntf* ptInst, uint16_t u16Addr, uint16_t* pu16
                     break;
                 case MCB_REP_WRITE_ERROR:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
+                    Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[(uint16_t)0U]);
 
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
-                        ptInst->u16Sz = MCB_FRM_CONFIG_SZ;
                         ptInst->eState = MCB_WRITE_ERROR;
                     }
                     else
@@ -707,7 +705,7 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
             {
                 case MCB_REP_ACK:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
+                    Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[(uint16_t)0U]);
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
                         if (ptInst->isPending != false)
@@ -727,7 +725,7 @@ static bool Mcb_IntfWriteCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Addr, uint
                     break;
                 case MCB_REP_WRITE_ERROR:
                     /* Copy read data to buffer - Also copy it in case of error msg */
-                    ptInst->u16Sz += Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[ptInst->u16Sz]);
+                    Mcb_FrameGetConfigData(&(ptInst->tRxfrm), &pu16Data[(uint16_t)0U]);
 
                     if (Mcb_FrameGetAddr(&(ptInst->tRxfrm)) == u16Addr)
                     {
