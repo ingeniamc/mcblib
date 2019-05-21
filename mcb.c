@@ -838,7 +838,7 @@ Mcb_ECyclicMode Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode
     tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
     tMcbMsg.u16Size = WORDSIZE_16BIT;
-    tMcbMsg.u16Data[0] = (uint16_t)ptInst->eSyncMode;
+    tMcbMsg.u16Data[0] = (uint16_t)eNewCycMode;
 
     do
     {
