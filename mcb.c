@@ -827,6 +827,36 @@ Mcb_EStatus  Mcb_DisableCyclic(Mcb_TInst* ptInst)
 
 Mcb_ECyclicMode Mcb_GetCyclicMode(Mcb_TInst* ptInst)
 {
+    Mcb_TMsg tMcbMsg;
+    uint32_t u32Millis = Mcb_GetMillis();
+
+    tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
+    tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
+    tMcbMsg.u16Size = WORDSIZE_16BIT;
+
+    do
+    {
+        ptInst->Mcb_Read(ptInst, &tMcbMsg);
+
+        if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
+        {
+            tMcbMsg.eStatus = MCB_READ_ERROR;
+            break;
+        }
+
+    } while ((tMcbMsg.eStatus != MCB_READ_ERROR)
+             && (tMcbMsg.eStatus != MCB_READ_SUCCESS));
+
+    switch (tMcbMsg.eStatus)
+    {
+        case MCB_READ_SUCCESS:
+            ptInst->eSyncMode = tMcbMsg.u16Data[(uint16_t)0U];
+            break;
+        default:
+            /** Do nothing */
+            break;
+    }
+
     return ptInst->eSyncMode;
 }
 
@@ -838,7 +868,7 @@ Mcb_ECyclicMode Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode
     tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
     tMcbMsg.u16Addr = ADDR_CYCLIC_MODE;
     tMcbMsg.u16Size = WORDSIZE_16BIT;
-    tMcbMsg.u16Data[0] = (uint16_t)ptInst->eSyncMode;
+    tMcbMsg.u16Data[0] = (uint16_t)eNewCycMode;
 
     do
     {
