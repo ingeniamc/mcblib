@@ -22,10 +22,10 @@
 #include <stdbool.h>
 #include "mcb_frame.h"
 
-/** Number of semaphores instances */
-#define MCB_NUMBER_SEMAPHORE_RESOURCES (uint16_t)1U
-/** IRQ semaphore instance Id */
-#define SEMAPHORE_IRQ_RESOURCE (uint16_t)0U
+/** Number of resources instances */
+#define MCB_NUMBER_RESOURCES (uint16_t)1U
+/** IRQ resource instance Id */
+#define IRQ_RESOURCE (uint16_t)0U
 
 /** McbIntf Pin status */
 typedef enum
@@ -203,46 +203,59 @@ void
 Mcb_IntfSyncSignal(uint16_t u16Id);
 
 /**
- * Initialize binary semaphore instance
+ * Initialize resource instance
  *
- * @note The semaphore instance has to be initialized in unlock state
+ * @note The resource instance has to be initialized in release state
  *
  * @param[in] u16Id
  *  Instance Id to be initialized
  */
 void
-Mcb_IntfInitSem(uint16_t u16Id);
+Mcb_IntfInitResource(uint16_t u16Id);
 
 /**
- * Delete semaphore instance
+ * Delete resource instance
  *
  * @param[in] u16Id
  *  Instance Id to be deleted
  */
 void
-Mcb_IntfDeinitSem(uint16_t u16Id);
+Mcb_IntfDeinitResource(uint16_t u16Id);
 
 /**
- * Try to take semaphore instance
+ * Try to take resource instance
  *
  * @note Non blocking function
  *
  * @param[in] u16Id
  *  Instance Id to be taken
  *
- * @retval TRUE if semaphore lock, FALSE otherwise
+ * @retval TRUE if resource taken, FALSE otherwise
  */
 bool
-Mcb_IntfTryLockSem(uint16_t u16Id);
+Mcb_IntfTryTakeResource(uint16_t u16Id);
 
 /**
- * Unlock instance
+ * Take resource instance
+ *
+ * @note Blocking function
+ *
+ * @param[in] u16Id
+ *  Instance Id to be taken
+ *
+ * @retval TRUE if resource taken, FALSE otherwise
+ */
+bool
+Mcb_IntfTakeResource(uint16_t u16Id);
+
+/**
+ * Unlock resource instance
  *
  * @param[in] u16Id
  *  Instance Id to be unlocked
  */
 void
-Mcb_IntfUnlockSem(uint16_t u16Id);
+Mcb_IntfReleaseResource(uint16_t u16Id);
 
 #endif /* MCB_USR_H */
 

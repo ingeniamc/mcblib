@@ -10,8 +10,8 @@
 #include "mcb_usr.h"
 #include "mcb_checksum.h"
 
-/** Struct used when no semaphore instance defined by user */
-volatile bool ptFlag[MCB_NUMBER_SEMAPHORE_RESOURCES];
+/** Struct used when no resource instance defined by user */
+volatile bool ptFlag[MCB_NUMBER_RESOURCES];
 
 __attribute__((weak))uint8_t Mcb_IntfReadIRQ(uint16_t u16Id)
 {
@@ -74,44 +74,58 @@ __attribute__((weak))void Mcb_IntfSyncSignal(uint16_t u16Id)
 
 }
 
-__attribute__((weak))void Mcb_IntfInitSem(uint16_t u16Id)
+__attribute__((weak))void Mcb_IntfInitResource(uint16_t u16Id)
 {
-    /** Init the semaphore instance, unlock state */
-    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    /** Init the resource instance, release state */
+    if (u16Id < MCB_NUMBER_RESOURCES)
     {
         ptFlag[u16Id] = true;
     }
 }
 
-__attribute__((weak))void Mcb_IntfDeinitSem(uint16_t u16Id)
+__attribute__((weak))void Mcb_IntfDeinitResource(uint16_t u16Id)
 {
-    /** Remove the semaphore instance */
-    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    /** Remove the resource instance */
+    if (u16Id < MCB_NUMBER_RESOURCES)
     {
         ptFlag[u16Id] = false;
     }
 }
 
-__attribute__((weak))bool Mcb_IntfTryLockSem(uint16_t u16Id)
+__attribute__((weak))bool Mcb_IntfTryLockResource(uint16_t u16Id)
 {
-    /** Non blocking semaphore lock */
-    bool isSemLock = false;
+    /** Non blocking resource take */
+    bool isResTak = false;
 
-    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    if (u16Id < MCB_NUMBER_RESOURCES)
     {
         if (ptFlag[u16Id] != false)
         {
             ptFlag[u16Id] = false;
-            isSemLock = true;
+            isResTak = true;
         }
     }
-    return isSemLock;
+    return isResTak;
 }
 
-__attribute__((weak))void Mcb_IntfUnlockSem(uint16_t u16Id)
+__attribute__((weak))bool Mcb_IntfTakeResource(uint16_t u16Id)
 {
-    /** Unlock semaphore instance */
-    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    /** Blocking resource take */
+    bool isResTak = false;
+
+    if (u16Id < MCB_NUMBER_RESOURCES)
+    {
+        while (ptFlag[u16Id] == false);
+
+        ptFlag[u16Id] = false;
+        isResTak = true;
+    }
+    return isResTak;
+}
+
+__attribute__((weak))void Mcb_IntfReleaseResource(uint16_t u16Id)
+{
+    if (u16Id < MCB_NUMBER_RESOURCES)
     {
         ptFlag[u16Id] = true;
     }
