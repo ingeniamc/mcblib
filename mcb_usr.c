@@ -108,6 +108,21 @@ __attribute__((weak))bool Mcb_IntfTryLockSem(uint16_t u16Id)
     return isSemLock;
 }
 
+__attribute__((weak))bool Mcb_IntfLockSem(uint16_t u16Id)
+{
+    /** Non blocking semaphore lock */
+    bool isSemLock = false;
+
+    if (u16Id < MCB_NUMBER_SEMAPHORE_RESOURCES)
+    {
+        while (ptFlag[u16Id] == false);
+
+        ptFlag[u16Id] = false;
+        isSemLock = true;
+    }
+    return isSemLock;
+}
+
 __attribute__((weak))void Mcb_IntfUnlockSem(uint16_t u16Id)
 {
     /** Unlock semaphore instance */

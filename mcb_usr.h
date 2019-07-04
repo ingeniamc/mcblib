@@ -236,6 +236,19 @@ bool
 Mcb_IntfTryLockSem(uint16_t u16Id);
 
 /**
+ * Take semaphore instance
+ *
+ * @note Blocking function
+ *
+ * @param[in] u16Id
+ *  Instance Id to be taken
+ *
+ * @retval TRUE if semaphore lock, FALSE otherwise
+ */
+bool
+Mcb_IntfLockSem(uint16_t u16Id);
+
+/**
  * Unlock instance
  *
  * @param[in] u16Id
