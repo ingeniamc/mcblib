@@ -902,13 +902,14 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
     bool isTransfer = false;
     bool isCfgData;
 
-    if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false) && (Mcb_IntfTakeResource(IRQ_RESOURCE) != false))
+    if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false)
+        && (Mcb_IntfTakeResource(ptInst->tIntf.u16Id) != false))
     {
         isTransfer = true;
 
         eState = Mcb_IntfCfgOverCyclic(&ptInst->tIntf, ptInst->tConfigRpy.u16Node, ptInst->tConfigRpy.u16Addr,
-                                       &ptInst->tConfigRpy.u16Cmd, ptInst->tConfigRpy.u16Data, &ptInst->tConfigRpy.u16Size,
-                                       &isCfgData);
+                                       &ptInst->tConfigRpy.u16Cmd, ptInst->tConfigRpy.u16Data,
+                                       &ptInst->tConfigRpy.u16Size, &isCfgData);
 
         if ((eState == MCB_WRITE_SUCCESS) || (eState == MCB_WRITE_ERROR) ||
             (eState == MCB_READ_SUCCESS) || (eState == MCB_READ_ERROR) ||
@@ -934,11 +935,12 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
         if (isTransfer != false)
         {
-            Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx, ptInst->u16CyclicRx, ptInst->u16CyclicSize, isCfgData);
+            Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx, ptInst->u16CyclicRx,
+                            ptInst->u16CyclicSize, isCfgData);
         }
         else
         {
-            Mcb_IntfReleaseResource(IRQ_RESOURCE);
+            Mcb_IntfReleaseResource(ptInst->tIntf.u16Id);
         }
     }
 
