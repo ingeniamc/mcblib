@@ -22,8 +22,6 @@
 #include <stdbool.h>
 #include "mcb_frame.h"
 
-/** MCB interface id */
-#define MCB_INTF_1_ID     	 (uint16_t)0U
 /** Number of resources instances */
 #define MCB_NUMBER_RESOURCES (uint16_t)1U
 
