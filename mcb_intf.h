@@ -138,13 +138,13 @@ Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uin
  *  Received Cyclic data
  * @param[in] u16CyclicSz
  *  Cyclic transmission size
- * @param[in] isNewData
+ * @param[in] isNewCfgData
  *  Indicates if a new config data must be added into cyclic frame
  *
  * @retval Mcb_EStatus
  */
 void
-Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewData);
+Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewCfgData);
 
 #endif /* MCB_INTF_H */
 
