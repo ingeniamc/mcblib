@@ -92,7 +92,7 @@ __attribute__((weak))void Mcb_IntfDeinitResource(uint16_t u16Id)
     }
 }
 
-__attribute__((weak))bool Mcb_IntfTryLockResource(uint16_t u16Id)
+__attribute__((weak))bool Mcb_IntfTryTakeResource(uint16_t u16Id)
 {
     /** Non blocking resource take */
     bool isResTak = false;
