@@ -935,7 +935,7 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
         if (isTransfer != false)
         {
-            Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx, ptInst->u16CyclicRx,
+            Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx,
                             ptInst->u16CyclicSize, isCfgData);
         }
         else
@@ -946,6 +946,11 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
     *peCfgStat = eState;
     return isTransfer;
+}
+
+void Mcb_CyclicFrameProcess(Mcb_TInst* ptInst)
+{
+    Mcb_IntfProcessCyclic(&ptInst->tIntf, ptInst->u16CyclicRx, ptInst->u16CyclicSize);
 }
 
 static void Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
