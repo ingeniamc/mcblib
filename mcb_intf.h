@@ -128,26 +128,32 @@ Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t u16Addr, uin
                       uint16_t* pu16CfgSz, bool* pisNewData);
 
 /**
- * Execute a cyclic transfer through MCB
+ * Latch a cyclic transfer through MCB
  *
  * @param[in] ptInst
  *  Target instance
  * @param[in] ptInBuf
  *  Cyclic data to be sent
- * @param[out] ptOutBuf
- *  Received Cyclic data
  * @param[in] u16CyclicSz
  *  Cyclic transmission size
  * @param[in] isNewCfgData
  *  Indicates if a new config data must be added into cyclic frame
- *
- * @retval Mcb_EStatus
  */
 void
-Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t u16CyclicSz, bool isNewCfgData);
+Mcb_IntfCyclicLatch(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t u16CyclicSz, bool isNewCfgData);
 
+/**
+ * Process the received cyclic frame
+ *
+ * @param[in] ptInst
+ *  Target instance
+ * @param[out] ptOutBuf
+ *  Received Cyclic data
+ * @param[in] u16CyclicSz
+ *  Cyclic transmission size
+ */
 void
-Mcb_IntfProcessCyclic(Mcb_TIntf* ptInst, uint16_t *ptOutBuf,  uint16_t u16CyclicSz);
+Mcb_IntfProcessCyclic(Mcb_TIntf* ptInst, uint16_t *ptOutBuf, uint16_t u16CyclicSz);
 
 #endif /* MCB_INTF_H */
 

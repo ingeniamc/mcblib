@@ -896,7 +896,7 @@ Mcb_ECyclicMode Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode
     return ptInst->eSyncMode;
 }
 
-bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
+bool Mcb_CyclicProcessLatch(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 {
     Mcb_EStatus eState = MCB_STANDBY;
     bool isTransfer = false;
@@ -935,7 +935,7 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
         if (isTransfer != false)
         {
-            Mcb_IntfCyclic(&ptInst->tIntf, ptInst->u16CyclicTx,
+            Mcb_IntfCyclicLatch(&ptInst->tIntf, ptInst->u16CyclicTx,
                             ptInst->u16CyclicSize, isCfgData);
         }
         else

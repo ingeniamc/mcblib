@@ -384,7 +384,7 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
     return eCyclicState;
 }
 
-void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t u16CyclicSz, bool isNewCfgData)
+void Mcb_IntfCyclicLatch(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t u16CyclicSz, bool isNewCfgData)
 {
     if (isNewCfgData == false)
     {
