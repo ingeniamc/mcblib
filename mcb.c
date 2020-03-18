@@ -950,7 +950,10 @@ bool Mcb_CyclicProcessLatch(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
 
 void Mcb_CyclicFrameProcess(Mcb_TInst* ptInst)
 {
-    Mcb_IntfProcessCyclic(&ptInst->tIntf, ptInst->u16CyclicRx, ptInst->u16CyclicSize);
+    if (ptInst->isCyclic != false)
+    {
+        Mcb_IntfProcessCyclic(&ptInst->tIntf, ptInst->u16CyclicRx, ptInst->u16CyclicSize);
+    }
 }
 
 static void Mcb_ConfigOverCyclicCompl(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
