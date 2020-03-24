@@ -342,7 +342,7 @@ bool
 Mcb_CyclicProcessLatch(Mcb_TInst* ptInst, Mcb_EStatus* eCfgStat);
 
 /**
- * Callback to be called from transfer complete event
+ * Process the received cyclic buffer.
  *
  * @param[in] ptInst
  *  Mcb instance
