@@ -189,17 +189,6 @@ void
 Mcb_IntfSPITransfer(uint16_t u16Id, uint16_t* pu16In, uint16_t* pu16Out, uint16_t u16Sz);
 
 /**
- * Process the received cyclic buffer
- *
- * @note This function must be included into the complete transfer event
- *
- * @param[in] ptInst
- *  Pointer to Mcb instace
- */
-void
-Mcb_CyclicFrameProcess(Mcb_TIntf* ptInst);
-
-/**
  * Generate a pulse on the Sync0 signal for synchronization purpose
  *
  * @note Slave is triggering the rising edge of the Sync0 signal, so there
