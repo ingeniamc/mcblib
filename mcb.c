@@ -495,7 +495,7 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
         }
 
         /** Set up internal struct and verify a proper configuration */
-        if ((pRet != NULL) || (ptInst->tCyclicRxList.u8Mapped < MAX_MAPPED_REG))
+        if ((pRet != NULL) || (ptInst->tCyclicRxList.u8Mapped >= MAX_MAPPED_REG))
         {
             break;
         }
