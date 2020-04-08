@@ -417,7 +417,7 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     do
     {
         /** Check if the register is already mapped into mcb */
-        uint8_t *pu8ByOffset = (uint8_t*)ptInst->u16CyclicRx;
+        uint8_t* pu8ByOffset = (uint8_t*)ptInst->u16CyclicRx;
         for (uint8_t u8TxMapCnt = (uint8_t)0; u8TxMapCnt < ptInst->tCyclicTxList.u8Mapped; ++u8TxMapCnt)
         {
             if (ptInst->tCyclicTxList.u16Addr[u8TxMapCnt] == u16Addr)
@@ -483,7 +483,7 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     do
     {
         /** Check if the register is already mapped into mcb */
-        uint8_t *pu8ByOffset = (uint8_t*)ptInst->u16CyclicTx;
+        uint8_t* pu8ByOffset = (uint8_t*)ptInst->u16CyclicTx;
         for (uint8_t u8RxMapCnt = (uint8_t)0; u8RxMapCnt < ptInst->tCyclicRxList.u8Mapped; ++u8RxMapCnt)
         {
             if (ptInst->tCyclicRxList.u16Addr[u8RxMapCnt] == u16Addr)
