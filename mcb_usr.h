@@ -24,8 +24,7 @@
 
 /** Number of resources instances */
 #define MCB_NUMBER_RESOURCES (uint16_t)1U
-/** IRQ resource instance Id */
-#define IRQ_RESOURCE (uint16_t)0U
+
 
 /** McbIntf Pin status */
 typedef enum

@@ -6,6 +6,7 @@ Motion core library implements the Ingenia Motion Control Bus protocol.
 
 * Develop for embedded devices, from low performance MCU to powerful MPU
 * Developed in C language
+* Designed to be integrated into RTOS
 
 ## Requirements ##
 
