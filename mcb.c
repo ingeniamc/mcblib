@@ -414,9 +414,26 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     Mcb_TMsg tMcbMsg;
     void* pRet = NULL;
 
-    /** Set up internal struct and verify a proper configuration */
-    if (ptInst->tCyclicTxList.u8Mapped < MAX_MAPPED_REG)
+    do
     {
+        /** Check if the register is already mapped into mcb */
+        uint8_t* pu8ByOffset = (uint8_t*)ptInst->u16CyclicRx;
+        for (uint8_t u8TxMapCnt = (uint8_t)0; u8TxMapCnt < ptInst->tCyclicTxList.u8Mapped; ++u8TxMapCnt)
+        {
+            if (ptInst->tCyclicTxList.u16Addr[u8TxMapCnt] == u16Addr)
+            {
+                pRet = pu8ByOffset;
+                break;
+            }
+            pu8ByOffset += ptInst->tCyclicTxList.u16Sz[u8TxMapCnt];
+        }
+
+        /** Set up internal struct and verify a proper configuration */
+        if ((pRet != NULL) || (ptInst->tCyclicTxList.u8Mapped >= MAX_MAPPED_REG))
+        {
+            break;
+        }
+
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = TX_MAP_BASE + ptInst->tCyclicTxList.u8Mapped + (uint16_t)1U;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
@@ -453,7 +470,7 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
                 /** Nothing */
                 break;
         }
-    }
+    } while (false);
 
     return pRet;
 }
@@ -463,9 +480,26 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
     Mcb_TMsg tMcbMsg;
     void* pRet = NULL;
 
-    /** Set up internal struct and verify a proper configuration */
-    if (ptInst->tCyclicRxList.u8Mapped < MAX_MAPPED_REG)
+    do
     {
+        /** Check if the register is already mapped into mcb */
+        uint8_t* pu8ByOffset = (uint8_t*)ptInst->u16CyclicTx;
+        for (uint8_t u8RxMapCnt = (uint8_t)0; u8RxMapCnt < ptInst->tCyclicRxList.u8Mapped; ++u8RxMapCnt)
+        {
+            if (ptInst->tCyclicRxList.u16Addr[u8RxMapCnt] == u16Addr)
+            {
+                pRet = pu8ByOffset;
+                break;
+            }
+            pu8ByOffset += ptInst->tCyclicRxList.u16Sz[u8RxMapCnt];
+        }
+
+        /** Set up internal struct and verify a proper configuration */
+        if ((pRet != NULL) || (ptInst->tCyclicRxList.u8Mapped >= MAX_MAPPED_REG))
+        {
+            break;
+        }
+
         tMcbMsg.u16Node = DEFAULT_MOCO_NODE;
         tMcbMsg.u16Addr = RX_MAP_BASE + ptInst->tCyclicRxList.u8Mapped + (uint16_t)1U;
         tMcbMsg.u16Cmd = MCB_REQ_WRITE;
@@ -502,7 +536,7 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
                 /** Nothing */
                 break;
         }
-    }
+    } while (false);
 
     return pRet;
 }

@@ -214,7 +214,7 @@ Mcb_AttachCfgOverCyclicCB(Mcb_TInst* ptInst, void (*Evnt)(Mcb_TInst* ptInst, Mcb
  * @param[in] u16Sz
  *  Size (bytes) of the register to be mapped
  *
- * @retval Pointer to cyclic buffer where data is located
+ * @retval Pointer to cyclic buffer where data is located, NULL if error
  */
 void*
 Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
@@ -231,7 +231,7 @@ Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
  * @param[in] u16Sz
  *  Size (bytes) of the register to be mapped
  *
- * @retval Pointer to cyclic buffer where data is located
+ * @retval Pointer to cyclic buffer where data is located, NULL if error
  */
 void*
 Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz);
