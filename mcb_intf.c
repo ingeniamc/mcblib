@@ -384,7 +384,7 @@ Mcb_EStatus Mcb_IntfCfgOverCyclic(Mcb_TIntf* ptInst, uint16_t u16Node, uint16_t 
     return eCyclicState;
 }
 
-void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, uint16_t u16CyclicSz, bool isNewCfgData)
+void Mcb_IntfCyclicLatch(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t u16CyclicSz, bool isNewCfgData)
 {
     if (isNewCfgData == false)
     {
@@ -398,7 +398,10 @@ void Mcb_IntfCyclic(Mcb_TIntf* ptInst, uint16_t *ptInBuf, uint16_t *ptOutBuf, ui
     }
 
     Mcb_IntfTransfer(ptInst, &(ptInst->tTxfrm), &(ptInst->tRxfrm));
+}
 
+void Mcb_IntfProcessCyclic(Mcb_TIntf* ptInst, uint16_t *ptOutBuf,  uint16_t u16CyclicSz)
+{
     /** Get cyclic data from last transmission */
     if (Mcb_IntfCheckCrc(ptInst->u16Id, ptInst->tRxfrm.u16Buf, ptInst->tTxfrm.u16Sz) != false)
     {

@@ -339,7 +339,16 @@ Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode);
  *         false otherwise
  */
 bool
-Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* eCfgStat);
+Mcb_CyclicProcessLatch(Mcb_TInst* ptInst, Mcb_EStatus* eCfgStat);
+
+/**
+ * Process the received cyclic buffer.
+ *
+ * @param[in] ptInst
+ *  Mcb instance
+ */
+void
+Mcb_CyclicFrameProcess(Mcb_TInst* ptInst);
 
 #endif
 
