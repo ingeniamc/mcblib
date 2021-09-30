@@ -903,7 +903,7 @@ bool Mcb_CyclicProcess(Mcb_TInst* ptInst, Mcb_EStatus* peCfgStat)
     bool isCfgData;
 
     if ((ptInst->isCyclic != false) && (Mcb_IntfIsReady(ptInst->tIntf.u16Id) != false)
-        && (Mcb_IntfTakeResource(ptInst->tIntf.u16Id) != false))
+        && (Mcb_IntfTryTakeResource(ptInst->tIntf.u16Id) != false))
     {
         isTransfer = true;
 
