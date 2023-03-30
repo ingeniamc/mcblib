@@ -181,6 +181,8 @@ static void Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
             pMcbInfoMsg->eStatus = Mcb_IntfGetInfo(&ptInst->tIntf, pMcbInfoMsg->u16Node, pMcbInfoMsg->u16Addr,
                                                    (uint16_t*)&pMcbInfoMsg->tInfoMsgData, &pMcbInfoMsg->u16Size);
 
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 pMcbInfoMsg->eStatus = MCB_GETINFO_ERROR;
@@ -199,6 +201,8 @@ static void Mcb_BlockingGetInfo(Mcb_TInst* ptInst, Mcb_TInfoMsg* pMcbInfoMsg)
 
         do
         {
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 pMcbInfoMsg->eStatus = MCB_GETINFO_ERROR;
@@ -231,6 +235,8 @@ static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
             pMcbMsg->eStatus = Mcb_IntfRead(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
                                             &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
 
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 pMcbMsg->eStatus = MCB_READ_ERROR;
@@ -249,6 +255,8 @@ static void Mcb_BlockingRead(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 
         do
         {
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 pMcbMsg->eStatus = MCB_READ_ERROR;
@@ -281,6 +289,8 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
             pMcbMsg->eStatus = Mcb_IntfWrite(&ptInst->tIntf, pMcbMsg->u16Node, pMcbMsg->u16Addr,
                                              &pMcbMsg->u16Data[0], &pMcbMsg->u16Size);
 
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 pMcbMsg->eStatus = MCB_WRITE_ERROR;
@@ -299,6 +309,8 @@ static void Mcb_BlockingWrite(Mcb_TInst* ptInst, Mcb_TMsg* pMcbMsg)
 
         do
         {
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 pMcbMsg->eStatus = MCB_WRITE_ERROR;
@@ -447,6 +459,8 @@ void* Mcb_TxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
         {
             ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 tMcbMsg.eStatus = MCB_WRITE_ERROR;
@@ -513,6 +527,8 @@ void* Mcb_RxMap(Mcb_TInst* ptInst, uint16_t u16Addr, uint16_t u16Sz)
         {
             ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 tMcbMsg.eStatus = MCB_WRITE_ERROR;
@@ -560,6 +576,8 @@ uint8_t Mcb_TxUnmap(Mcb_TInst* ptInst)
     {
         ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
+        Mcb_RelinquishCPU();
+
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
             tMcbMsg.eStatus = MCB_WRITE_ERROR;
@@ -605,6 +623,8 @@ uint8_t Mcb_RxUnmap(Mcb_TInst* ptInst)
     {
         ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
+        Mcb_RelinquishCPU();
+
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
             tMcbMsg.eStatus = MCB_WRITE_ERROR;
@@ -648,6 +668,8 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
     {
         ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
+        Mcb_RelinquishCPU();
+
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
             tMcbMsg.eStatus = MCB_WRITE_ERROR;
@@ -679,6 +701,8 @@ void Mcb_UnmapAll(Mcb_TInst* ptInst)
     do
     {
         ptInst->Mcb_Write(ptInst, &tMcbMsg);
+
+        Mcb_RelinquishCPU();
 
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
@@ -720,6 +744,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
         {
             ptInst->Mcb_Write(ptInst, &tMcbMsg);
 
+            Mcb_RelinquishCPU();
+
             if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
             {
                 tMcbMsg.eStatus = MCB_WRITE_ERROR;
@@ -752,6 +778,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             do
             {
                 ptInst->Mcb_Write(ptInst, &tMcbMsg);
+
+                Mcb_RelinquishCPU();
 
                 if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
@@ -786,6 +814,8 @@ int32_t Mcb_EnableCyclic(Mcb_TInst* ptInst)
             do
             {
                 ptInst->Mcb_Write(ptInst, &tMcbMsg);
+
+                Mcb_RelinquishCPU();
 
                 if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
                 {
@@ -872,6 +902,8 @@ Mcb_ECyclicMode Mcb_GetCyclicMode(Mcb_TInst* ptInst)
     {
         ptInst->Mcb_Read(ptInst, &tMcbMsg);
 
+        Mcb_RelinquishCPU();
+
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
             tMcbMsg.eStatus = MCB_READ_ERROR;
@@ -907,6 +939,8 @@ Mcb_ECyclicMode Mcb_SetCyclicMode(Mcb_TInst* ptInst, Mcb_ECyclicMode eNewCycMode
     do
     {
         ptInst->Mcb_Write(ptInst, &tMcbMsg);
+
+        Mcb_RelinquishCPU();
 
         if ((Mcb_GetMillis() - u32Millis) > ptInst->u32Timeout)
         {
