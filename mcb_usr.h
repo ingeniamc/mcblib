@@ -170,6 +170,18 @@ uint32_t
 Mcb_GetMillis(void);
 
 /**
+ * Relinquish (give up / allow others to execute) CPU.
+ * This is especially useful on RTOS systems which rely on cooperative
+ * threads in order share the CPU time.
+ * This routine will be invoked on every iteration if a blocking method
+ * uses busy waiting (i.e. timeouts).
+ *
+ * This should be a no-op on non RTOS systems.
+ */
+void
+Mcb_RelinquishCPU(void);
+
+/**
  * Executes a SPI transfer
  *
  * @note Chip select must be managed on this function

@@ -28,6 +28,11 @@ __attribute__((weak))uint32_t Mcb_GetMillis(void)
     return (uint32_t)0U;
 }
 
+__attribute__((weak))void Mcb_RelinquishCPU(void)
+{
+    return;
+}
+
 __attribute__((weak))bool Mcb_IntfIsReady(uint16_t u16Id)
 {
     /** Check if SPI instance is ready for initiate a new transmission */
